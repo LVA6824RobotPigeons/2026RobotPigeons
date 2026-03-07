@@ -28,6 +28,8 @@ import frc.robot.subsystems.Limelight;
 import frc.robot.subsystems.Shooter;
 import frc.robot.subsystems.Swerve;
 import frc.util.SwerveTelemetry;
+import org.py.cmm5.Controller;
+import org.py.cmm5.Controls;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -45,9 +47,12 @@ public class RobotContainer {
     private final Hanger hanger = new Hanger();
     private final Limelight limelight = new Limelight("limelight");
 
+    public CommandXboxController driver = new CommandXboxController(Main.use_cm_controller_selection?Controls.controllers.get(0).jid:Ports.driver);
+    public void refreshDriver() {
+        if(Main.use_cm_controller_selection) driver = new CommandXboxController(Controls.controllers.get(0).jid);
+    }
+
     private final SwerveTelemetry swerveTelemetry = new SwerveTelemetry(Driving.kMaxSpeed.in(MetersPerSecond));
-    
-    private final CommandXboxController driver = new CommandXboxController(0);
 
     private final AutoRoutines autoRoutines = new AutoRoutines(
         swerve,

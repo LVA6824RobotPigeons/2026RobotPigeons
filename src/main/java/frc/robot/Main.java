@@ -12,6 +12,14 @@ import edu.wpi.first.wpilibj.RobotBase;
  * call.
  */
 public final class Main {
+
+  public static Robot robot;
+
+  // Weither not to use ControlsManager's Controller selection feature
+  // Turn off if you are only using one controller, it becomes too
+  // Annoying and obstructive to be useful
+  public static final boolean use_cm_controller_selection = true;
+
   private Main() {}
 
   /**
@@ -20,6 +28,7 @@ public final class Main {
    * <p>If you change your main robot class, change the parameter type.
    */
   public static void main(String... args) {
-    RobotBase.startRobot(Robot::new);
+    robot = new Robot();
+    RobotBase.startRobot(robot::getThis);
   }
 }

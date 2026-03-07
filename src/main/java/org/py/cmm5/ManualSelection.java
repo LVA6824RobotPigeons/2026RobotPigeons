@@ -1,4 +1,4 @@
-package org.py;
+package org.py.cmm5;
 
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWGamepadState;
@@ -265,12 +265,13 @@ public class ManualSelection {
         Polyware.jf = null;
         Polyware.jp = null;
         ArrayList<Controller> controllers = new ArrayList<>();
-        for(int i = 0; i < selectedJIDs.size(); i++) controllers.add(new Controller());
+        for(int i = 0; i < selectedJIDs.size(); i++) controllers.add(new Controller(selectedJIDs.get(i)));
         Controls.setControllers(controllers);
         Main.selectedJIDs = selectedJIDs;
         System.out.println("[ControlsManager:Polyware] Updated controllers: JIDs: " + selectedJIDs.toString());
-        Sandbox.ready = true;
-        Sandbox.sandboxStart();
+        AllControls.ready = true;
+        frc.robot.Main.robot.m_robotContainer.refreshDriver();
+        AllControls.sandboxStart();
     }
 
 }

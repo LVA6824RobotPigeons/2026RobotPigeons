@@ -5,8 +5,9 @@
 //                                                                         ____/
 //      Testing Environment - CM-M4
 
-package org.py;
+package org.py.cmm5;
 
+import edu.wpi.first.wpilibj.XboxController;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWGamepadState;
 
@@ -129,7 +130,7 @@ public class Main {
 
                 System.out.println();
 
-                for(int i = 0; i < selectedJIDs.size(); i++) controllers.add(new Controller());
+                for(int i = 0; i < selectedJIDs.size(); i++) controllers.add(new Controller(selectedJIDs.get(i)));
 
             } else {
                 if(startToSelect) System.out.println("(!) Start-to-select is not compatible with WPIMode.");
@@ -142,10 +143,10 @@ public class Main {
                     if(input.equals("done")) break;
                     try {
                         int in = Integer.parseInt(input);
-                        Controller controller = new Controller();
+                        Controller controller = new Controller(in);
                         boolean add = true;
                         for(XboxControllerAdapter adapter : xboxControllerAdapters) {
-                            if(adapter.xboxController.port == in) {
+                            if(adapter.xboxController.getPort() == in) {
                                 System.out.println("| (!) That port is already added.");
                                 add = false;
                             }
@@ -162,6 +163,8 @@ public class Main {
             }
 
             Controls.setControllers(controllers);
+            frc.robot.Main.robot.m_robotContainer.refreshDriver();
+
         }
     }
 

@@ -1,4 +1,4 @@
-package frc.robot;
+package org.py.cmm5;
 
 import org.py.cmm5.Controls;
 
@@ -6,12 +6,10 @@ public class AllControls {
 
     public static void sandboxStart() {
 
-        Controls.controlsLogger(true);
+        // Controls go here, move this class anywhere you'd like, and make sure to update
+        // imports or else
 
-        Controls.addControl("test", Controls.BinaryComponents.A,new int[] {1})
-                .linkControl(Controls.BinaryComponents.B);
-
-        Controls.addControl("test2",Controls.ThresholdComponents.AX,"GREATER_THAN:0.5");
+        // Also if you aren't using this feature of ControlsManager don't worry about this
 
     }
 

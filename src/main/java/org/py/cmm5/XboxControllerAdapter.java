@@ -1,6 +1,9 @@
-package org.py;
+package org.py.cmm5;
 
 // Translates WPILib's XboxController Output to ControlManager's Controller Output
+
+import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.event.EventLoop;
 
 public class XboxControllerAdapter {
 
@@ -24,10 +27,10 @@ public class XboxControllerAdapter {
                         case B:  c.value = xboxController.getBButton()?1.0:0.0; break;
                         case X:  c.value = xboxController.getXButton()?1.0:0.0; break;
                         case Y:  c.value = xboxController.getYButton()?1.0:0.0; break;
-                        case DL: c.value = xboxController.povLeft()||xboxController.povUpLeft()||xboxController.povDownRight()?1.0:0.0; break;
-                        case DR: c.value = xboxController.povRight()||xboxController.povUpRight()||xboxController.povDownRight()?1.0:0.0; break;
-                        case DU: c.value = xboxController.povUp()||xboxController.povUpLeft()||xboxController.povRight()?1.0:0.0; break;
-                        case DD: c.value = xboxController.povDown()||xboxController.povDownLeft()||xboxController.povDownRight()?1.0:0.0; break;
+//                        case DL: c.value = xboxController.povLeft()||xboxController.povUpLeft()||xboxController.povDownRight()?1.0:0.0; break;
+//                        case DR: c.value = xboxController.povRight()||xboxController.povUpRight()||xboxController.povDownRight()?1.0:0.0; break;
+//                        case DU: c.value = xboxController.povUp()||xboxController.povUpLeft()||xboxController.povRight()?1.0:0.0; break;
+//                        case DD: c.value = xboxController.povDown()||xboxController.povDownLeft()||xboxController.povDownRight()?1.0:0.0; break;
                         case JA: c.value = xboxController.getLeftStickButton()?1.0:0.0; break;
                         case JB: c.value = xboxController.getRightStickButton()?1.0:0.0; break;
                         case SA: c.value = xboxController.getBackButton()?1.0:0.0; break;

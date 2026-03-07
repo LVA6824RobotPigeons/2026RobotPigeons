@@ -1,6 +1,6 @@
 plugins {
     id "java"
-    id "edu.wpi.first.GradleRIO" version "2026.1.1"
+    id "edu.wpi.first.GradleRIO" version "2026.2.1"
 }
 
 java {
@@ -57,6 +57,11 @@ dependencies {
     implementation wpi.java.deps.wpilib()
     implementation wpi.java.vendor.java()
 
+    implementation platform("org.lwjgl:lwjgl-bom:3.3.3")
+    implementation "org.lwjgl:lwjgl"
+    implementation "org.lwjgl:lwjgl-glfw"
+    implementation "org.lwjgl:lwjgl-opengl"
+
     roborioDebug wpi.java.deps.wpilibJniDebug(wpi.platforms.roborio)
     roborioDebug wpi.java.vendor.jniDebug(wpi.platforms.roborio)
 
@@ -73,6 +78,11 @@ dependencies {
 
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.1'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    runtimeOnly "org.lwjgl:lwjgl:3.3.3:natives-windows"
+    runtimeOnly "org.lwjgl:lwjgl-glfw:3.3.3:natives-windows"
+    runtimeOnly "org.lwjgl:lwjgl-opengl:3.3.3:natives-windows"
+
 }
 
 test {

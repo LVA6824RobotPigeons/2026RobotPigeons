@@ -17,7 +17,9 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
  * this project, you must also update the Main.java file in the project.
  */
 public class Robot extends TimedRobot {
-    private final RobotContainer m_robotContainer;
+    public final RobotContainer m_robotContainer;
+
+    public Robot getThis() { return this; }
     
     /**
      * This function is run when the robot is first started up and should be used for any
@@ -29,6 +31,7 @@ public class Robot extends TimedRobot {
         m_robotContainer = new RobotContainer();
         SmartDashboard.putData(CommandScheduler.getInstance());
         RobotController.setBrownoutVoltage(Volts.of(6.1));
+        if(Main.use_cm_controller_selection) org.py.cmm5.Main.init();
     }
     
     /**
@@ -45,5 +48,6 @@ public class Robot extends TimedRobot {
         // and running subsystem periodic() methods.  This must be called from the robot's periodic
         // block in order for anything in the Command-based framework to work.
         CommandScheduler.getInstance().run();
+        if(Main.use_cm_controller_selection) org.py.cmm5.Main.process();
     }
 }

@@ -1,6 +1,12 @@
-package org.py;
+package org.py.cmm5;
 
 public class Controller {
+
+    public int jid;
+
+    public Controller(int jid) {
+        this.jid = jid;
+    }
 
     public Component[] components = {
 

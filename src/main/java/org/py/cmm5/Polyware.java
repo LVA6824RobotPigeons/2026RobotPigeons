@@ -1,4 +1,4 @@
-package org.py;
+package org.py.cmm5;
 
 import javax.swing.*;
 import java.awt.*;
