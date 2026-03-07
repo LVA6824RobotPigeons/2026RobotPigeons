@@ -1,0 +1,3 @@
+selection--use-polyware: true
+selection--mode: start-to-select
+wpi-mode: false
