@@ -1,6 +1,8 @@
-package org.py.cmm5;
+package frc.robot;
 
-public class Sandbox {
+import org.py.cmm5.Controls;
+
+public class AllControls {
 
     public static void sandboxStart() {
 
