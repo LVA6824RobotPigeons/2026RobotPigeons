@@ -121,7 +121,7 @@ public class RobotContainer {
         driver.b().onTrue(Commands.runOnce(() -> manualDriveCommand.setLockedHeading(Rotation2d.kCW_90deg)));
         driver.x().onTrue(Commands.runOnce(() -> manualDriveCommand.setLockedHeading(Rotation2d.kCCW_90deg)));
         driver.y().onTrue(Commands.runOnce(() -> manualDriveCommand.setLockedHeading(Rotation2d.kZero)));
-        driver.back().onTrue(Commands.runOnce(() -> manualDriveCommand.seedFieldCentric()));
+        driver.back().onTrue(Commands.runOnce(manualDriveCommand::seedFieldCentric));
     }
 
     private Command updateVisionCommand() {

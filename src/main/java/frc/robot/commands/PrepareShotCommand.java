@@ -24,6 +24,7 @@ public class PrepareShotCommand extends Command {
                 .inverseInterpolate(startValue.in(Meters), endValue.in(Meters), q.in(Meters)),
         (startValue, endValue, t) ->
             new Shot(
+                // Gets t percent of the way from start value to end value (T = 0-1, as 0% - 100%)
                 Interpolator.forDouble()
                     .interpolate(startValue.shooterRPM, endValue.shooterRPM, t),
                 Interpolator.forDouble()
