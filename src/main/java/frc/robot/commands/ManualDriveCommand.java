@@ -69,8 +69,8 @@ public class ManualDriveCommand extends Command {
     }
 
     public void seedFieldCentric() {
-        initialize();
-        swerve.seedFieldCentric();
+        initialize(); // Initializes crap
+        swerve.seedFieldCentric(); // Resets the rotation tracker, meaning if you set the position facing away from you upon initialization, it will be relative to you.
     }
 
     public void setLockedHeading(Rotation2d heading) {
@@ -79,19 +79,19 @@ public class ManualDriveCommand extends Command {
     }
 
     private void setLockedHeadingToCurrent() {
-        final Rotation2d headingInBlueAlliancePerspective = swerve.getState().Pose.getRotation();
-        final Rotation2d headingInOperatorPerspective = headingInBlueAlliancePerspective.rotateBy(swerve.getOperatorForwardDirection());
-        setLockedHeading(headingInOperatorPerspective);
+        final Rotation2d headingInBlueAlliancePerspective = swerve.getState().Pose.getRotation(); // Gets rotation based on the blue alliance
+        final Rotation2d headingInOperatorPerspective = headingInBlueAlliancePerspective.rotateBy(swerve.getOperatorForwardDirection()); //  Adjusts rotation to match alliance
+        setLockedHeading(headingInOperatorPerspective); // Sets "heading" to that
     }
 
     private void lockHeadingIfRotationStopped(ManualDriveInput input) {
-        if (input.hasRotation()) {
-            headingLockStopwatch.reset();
-            lockedHeading = Optional.empty();
+        if (input.hasRotation()) { // If input is greater than 0
+            headingLockStopwatch.reset(); // Resets heading stopwatch
+            lockedHeading = Optional.empty(); // Locked heading reset to null
         } else {
-            headingLockStopwatch.startIfNotRunning();
-            if (headingLockStopwatch.elapsedTime().gt(kHeadingLockDelay)) {
-                setLockedHeadingToCurrent();
+            headingLockStopwatch.startIfNotRunning(); // Take a guess
+            if (headingLockStopwatch.elapsedTime().gt(kHeadingLockDelay)) { // If elapsed time is greater than heading lock delay
+                setLockedHeadingToCurrent(); // Update locked heading to our current
             }
         }
     }
@@ -106,16 +106,20 @@ public class ManualDriveCommand extends Command {
 
     @Override
     public void execute() {
-        final ManualDriveInput input = inputSmoother.getSmoothedInput();
+        final ManualDriveInput input = inputSmoother.getSmoothedInput(); // Smooths input to be less jagged
         if (input.hasRotation()) {
+            // If rotation is > 0
             currentState = State.DRIVING_WITH_MANUAL_ROTATION;
         } else if (input.hasTranslation()) {
+            // If x or y are greater than 0 but has no rotation
             currentState = lockedHeading.isPresent() ? State.DRIVING_WITH_LOCKED_HEADING : State.DRIVING_WITH_MANUAL_ROTATION;
         } else if (previousInput.hasRotation() || previousInput.hasTranslation()) {
+            // If x or y JUST became 0 (No rotation, no translation)
             currentState = State.IDLING;
         }
-        previousInput = input;
+        previousInput = input; // Updates input for next time it's called
 
+        // State handling
         switch (currentState) {
             case IDLING:
                 swerve.setControl(idleRequest);
@@ -142,7 +146,7 @@ public class ManualDriveCommand extends Command {
 
     @Override
     public boolean isFinished() {
-        // Default drive command: runs until interrupted
+        // Runs until manually stopped
         return false;
     }
 }

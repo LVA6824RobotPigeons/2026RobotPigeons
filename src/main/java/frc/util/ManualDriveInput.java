@@ -16,7 +16,7 @@ public class ManualDriveInput {
     }
 
     public boolean hasTranslation() {
-        return Math.hypot(forward, left) > 0;
+        return (left != 0.0) || (forward != 0.0);
     }
 
     public boolean hasRotation() {
