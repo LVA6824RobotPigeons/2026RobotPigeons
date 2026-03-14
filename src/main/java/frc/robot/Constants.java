@@ -37,7 +37,7 @@ public final class Constants {
         public static RGBWColor kWhite = new RGBWColor(255,255,255);
         public static RGBWColor kRed = new RGBWColor(255,0,0);
         public static RGBWColor kYellow = new RGBWColor(255,255,0);
-        public static RGBWColor kGreen = new RGBWColor(0,255,255);
+        public static RGBWColor kGreen = new RGBWColor(0,255,0);
         public static RGBWColor kCyan = new RGBWColor(0,255,255);
         public static RGBWColor kBlue = new RGBWColor(0,0,255);
         public static RGBWColor kMichenta = new RGBWColor(255,0,255);
