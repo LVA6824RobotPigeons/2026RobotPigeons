@@ -44,38 +44,42 @@ public class AimAndDriveCommand extends Command {
         addRequirements(swerve);
     }
 
-    public AimAndDriveCommand(Swerve swerve) {
+    /*public AimAndDriveCommand(Swerve swerve) {
         this(swerve, () -> 0, () -> 0);
-    }
+    }*/
 
+    /**
+     * @return Returns if it SHOULD aim, not if it IS aimed.
+     */
     public boolean isAimed() {
         final Rotation2d targetHeading = fieldCentricFacingAngleRequest.TargetDirection;
-        final Rotation2d currentHeadingInBlueAlliancePerspective = swerve.getState().Pose.getRotation();
-        final Rotation2d currentHeadingInOperatorPerspective = currentHeadingInBlueAlliancePerspective.rotateBy(swerve.getOperatorForwardDirection());
-        return GeometryUtil.isNear(targetHeading, currentHeadingInOperatorPerspective, kAimTolerance);
+        final Rotation2d currentHeadingInBlueAlliancePerspective = swerve.getState().Pose.getRotation(); // Gets absolute rotation (Based on the default reference point, which is blue alliance)
+        final Rotation2d currentHeadingInOperatorPerspective = currentHeadingInBlueAlliancePerspective.rotateBy(swerve.getOperatorForwardDirection()); // Converts rotation to operator's perspective
+        return GeometryUtil.isNear(targetHeading, currentHeadingInOperatorPerspective, kAimTolerance); // Only returns true if the direction is within a certain tolerance from the target rotation
     }
 
     private Rotation2d getDirectionToHub() {
-        final Translation2d hubPosition = Landmarks.hubPosition();
-        final Translation2d robotPosition = swerve.getState().Pose.getTranslation();
-        final Rotation2d hubDirectionInBlueAlliancePerspective = hubPosition.minus(robotPosition).getAngle();
-        final Rotation2d hubDirectionInOperatorPerspective = hubDirectionInBlueAlliancePerspective.rotateBy(swerve.getOperatorForwardDirection());
+        final Translation2d hubPosition = Landmarks.hubPosition(); // Gets hub based on team (meters)
+        final Translation2d robotPosition = swerve.getState().Pose.getTranslation(); // Gets robot position (meters)
+        final Rotation2d hubDirectionInBlueAlliancePerspective = hubPosition.minus(robotPosition).getAngle(); // Gets absolute rotation (Based on the default reference point, which is blue alliance)
+        final Rotation2d hubDirectionInOperatorPerspective = hubDirectionInBlueAlliancePerspective.rotateBy(swerve.getOperatorForwardDirection()); // Converts rotation to operator's perspective
         return hubDirectionInOperatorPerspective;
     }
 
     @Override
     public void execute() {
-        final ManualDriveInput input = inputSmoother.getSmoothedInput();
+        final ManualDriveInput input = inputSmoother.getSmoothedInput(); // Smooths out input to make it more spherical
+        // Sets up swerve to always face the hub, while still driving as normal
         swerve.setControl(
             fieldCentricFacingAngleRequest
-                .withVelocityX(Driving.kMaxSpeed.times(input.forward))
-                .withVelocityY(Driving.kMaxSpeed.times(input.left))
-                .withTargetDirection(getDirectionToHub())
+                .withVelocityX(Driving.kMaxSpeed.times(input.forward)) // Input maxed out
+                .withVelocityY(Driving.kMaxSpeed.times(input.left)) // Input maxed out
+                .withTargetDirection(getDirectionToHub()) // Gets direction to hub based on operator's view
         );
     }
 
     @Override
     public boolean isFinished() {
-        return false;
+        return false; // Makes the command never end until switched
     }
 }

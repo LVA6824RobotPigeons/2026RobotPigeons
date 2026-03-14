@@ -66,12 +66,16 @@ public final class AutoRoutines {
     }
 
     public void configure() {
+        /* add smart dash keys and init routine */
         autoChooser.addRoutine("Outpost and Depot", this::outpostAndDepotRoutine);
         SmartDashboard.putData("Auto Chooser", autoChooser);
         RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());
     }
 
     private AutoRoutine outpostAndDepotRoutine() {
+        /* Auto routine for driving around between depot and outpost to collect ball */
+
+        // init vars
         final AutoRoutine routine = autoFactory.newRoutine("Outpost and Depot");
         final AutoTrajectory startToOutpost = OutpostAndDepotTrajectory$0.asAutoTraj(routine);
         final AutoTrajectory outpostToDepot = OutpostAndDepotTrajectory$1.asAutoTraj(routine);
@@ -81,22 +85,25 @@ public final class AutoRoutines {
         routine.active().onTrue(
             Commands.sequence(
                 startToOutpost.resetOdometry(),
-                startToOutpost.cmd()
+                startToOutpost.cmd() //reset odo, checks if valid traj in, if not, begin
             )
         );
 
         routine.observe(hanger::isHomed).onTrue(
             Commands.sequence(
                 Commands.waitSeconds(0.5),
-                intake.runOnce(() -> intake.set(Intake.Position.INTAKE))
+                intake.runOnce(() -> intake.set(Intake.Position.INTAKE))  // if homed, head to position of balls
             )
         );
 
+        // after a given delay (1s), execute outpost to depot routine
         startToOutpost.doneDelayed(1).onTrue(outpostToDepot.cmd());
 
+        // once in position, prepare to shoot
         outpostToDepot.atTimeBeforeEnd(1).onTrue(intake.intakeCommand());
         outpostToDepot.doneDelayed(0.1).onTrue(depotToShootingPose.cmd());
 
+        //shooting portion
         depotToShootingPose.active().whileTrue(limelight.idle());
         depotToShootingPose.atTime(0.5).onTrue(
             Commands.parallel(
