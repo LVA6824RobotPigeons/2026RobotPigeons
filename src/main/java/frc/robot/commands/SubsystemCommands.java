@@ -72,6 +72,8 @@ public final class SubsystemCommands {
     public Command aimAndShoot() {
         final AimAndDriveCommand aimAndDriveCommand = new AimAndDriveCommand(swerve, yInput, xInput);
         final PrepareShotCommand prepareShotCommand = new PrepareShotCommand(shooter, hood, () -> swerve.getState().Pose);
+        // Aims and then drives, then prepares shot after 0.25 seconds, then waits until aimed and ready to shoot, then "feeds" for some reason
+        // (All at the same time)
         return Commands.parallel(
             aimAndDriveCommand,
             Commands.waitSeconds(0.25)
@@ -83,17 +85,18 @@ public final class SubsystemCommands {
 
     public Command shootManually() {
         return shooter.dashboardSpinUpCommand()
-            .andThen(feed())
-            .handleInterrupt(shooter::stop);
+            .andThen(feed()) // Feeds
+            .handleInterrupt(shooter::stop); // Stops shooter
     }
 
     private Command feed() {
+        // One after another
         return Commands.sequence(
-            Commands.waitSeconds(0.25),
-            Commands.parallel(
-                feeder.feedCommand(),
-                Commands.waitSeconds(0.125)
-                    .andThen(floor.feedCommand().alongWith(intake.agitateCommand()))
+            Commands.waitSeconds(0.25), // Waits
+            Commands.parallel( // All at once
+                feeder.feedCommand(), // Starts feeding
+                Commands.waitSeconds(0.125) // Waits a lil
+                    .andThen(floor.feedCommand().alongWith(intake.agitateCommand())) // Spits out
             )
         );
     }
