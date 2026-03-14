@@ -7,6 +7,7 @@ package frc.robot;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 
+import com.ctre.phoenix6.signals.RGBWColor;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.LinearVelocity;
 import frc.robot.generated.TunerConstants;
@@ -33,5 +34,14 @@ public final class Constants {
     public static class LEDs {
         public static final int kStartLED = 0;
         public static final int kNumberOfLights = 8;
+        public static RGBWColor kWhite = new RGBWColor(255,255,255);
+        public static RGBWColor kRed = new RGBWColor(255,0,0);
+        public static RGBWColor kYellow = new RGBWColor(255,255,0);
+        public static RGBWColor kGreen = new RGBWColor(0,255,0);
+        public static RGBWColor kCyan = new RGBWColor(0,255,255);
+        public static RGBWColor kBlue = new RGBWColor(0,0,255);
+        public static RGBWColor kMichenta = new RGBWColor(255,0,255);
+        public static RGBWColor kBlack = new RGBWColor(0,0,0);
+
     }
 }

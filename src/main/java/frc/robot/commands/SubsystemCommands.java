@@ -2,8 +2,11 @@ package frc.robot.commands;
 
 import java.util.function.DoubleSupplier;
 
+import com.ctre.phoenix6.signals.RGBWColor;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.Constants;
+import frc.robot.Ports;
 import frc.robot.subsystems.Feeder;
 import frc.robot.subsystems.Floor;
 import frc.robot.subsystems.Hanger;
@@ -70,16 +73,26 @@ public final class SubsystemCommands {
     }
 
     public Command aimAndShoot() {
+
+        final Command ledOnCommand = Commands.runOnce(
+            () -> Ports.kCandle.setColor(
+                Constants.LEDs.kCyan,
+                4
+            )
+        );
+
         final AimAndDriveCommand aimAndDriveCommand = new AimAndDriveCommand(swerve, yInput, xInput);
         final PrepareShotCommand prepareShotCommand = new PrepareShotCommand(shooter, hood, () -> swerve.getState().Pose);
         // Aims and then drives, then prepares shot after 0.25 seconds, then waits until aimed and ready to shoot, then "feeds" for some reason
         // (All at the same time)
-        return Commands.parallel(
-            aimAndDriveCommand,
-            Commands.waitSeconds(0.25)
-                .andThen(prepareShotCommand),
-            Commands.waitUntil(() -> aimAndDriveCommand.isAimed() && prepareShotCommand.isReadyToShoot())
-                .andThen(feed())
+        return ledOnCommand.andThen(
+            Commands.parallel(
+                aimAndDriveCommand,
+                Commands.waitSeconds(0.25)
+                    .andThen(prepareShotCommand),
+                Commands.waitUntil(() -> aimAndDriveCommand.isAimed() && prepareShotCommand.isReadyToShoot())
+                    .andThen(feed())
+            )
         );
     }
 
