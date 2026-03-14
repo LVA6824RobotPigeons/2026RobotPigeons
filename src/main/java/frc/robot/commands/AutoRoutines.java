@@ -73,7 +73,6 @@ public final class AutoRoutines {
     }
 
     private AutoRoutine outpostAndDepotRoutine() {
-        /* Auto routine for driving around between depot and outpost to collect ball */
 
         final AutoRoutine routine = autoFactory.newRoutine("Outpost and Depot"); // Makes new routine
         final AutoTrajectory startToOutpost = OutpostAndDepotTrajectory$0.asAutoTraj(routine);
@@ -81,49 +80,44 @@ public final class AutoRoutines {
         final AutoTrajectory depotToShootingPose = OutpostAndDepotTrajectory$2.asAutoTraj(routine);
         final AutoTrajectory shootingPoseToTower = OutpostAndDepotTrajectory$3.asAutoTraj(routine);
 
-        // Overview: Start by moving to outpost
         routine.active().onTrue(
-            Commands.sequence(
+            Commands.sequence( // One after another
                 startToOutpost.resetOdometry(), // Resets "movement tracker"
                 startToOutpost.cmd() // Move to outpost (The area where balls are loaded by people
             )
         );
 
-        // Overview: When hanger is homed, wait 0.5s then move to intake position
         routine.observe(hanger::isHomed).onTrue( // Only executed if hanger is homed
-            Commands.sequence(
+            Commands.sequence( // One after another
                 Commands.waitSeconds(0.5), // Waits a bit (Very small amount)
                 intake.runOnce(() -> intake.set(Intake.Position.INTAKE))  // Move to intake position
             )
         );
 
-        startToOutpost.doneDelayed(1).onTrue(outpostToDepot.cmd()); // After 1 second, it will return to depot
+        startToOutpost.doneDelayed(1).onTrue(outpostToDepot.cmd()); // After 1 second, it drives to depot
 
-        // once in position, prepare to shoot
-        outpostToDepot.atTimeBeforeEnd(1).onTrue(intake.intakeCommand());
-        outpostToDepot.doneDelayed(0.1).onTrue(depotToShootingPose.cmd());
+        outpostToDepot.atTimeBeforeEnd(1).onTrue(intake.intakeCommand()); // Starts intake 1 second before it arrives at depot
+        outpostToDepot.doneDelayed(0.1).onTrue(depotToShootingPose.cmd()); // Wait 0.1 second and then move to shooting position
 
-        //shooting portion
-        depotToShootingPose.active().whileTrue(limelight.idle());
-        depotToShootingPose.atTime(0.5).onTrue(
-            Commands.parallel(
-                shooter.spinUpCommand(2600), // get in pos and prepare. wait for tolerance
-                hood.positionCommand(0.32)
+        depotToShootingPose.active().whileTrue(limelight.idle()); // Goes to shooting move when limelight is idle
+        depotToShootingPose.atTime(0.5).onTrue( // 0.5 seconds after command starts, it aims and then shoot
+            Commands.parallel( // Both at once
+                shooter.spinUpCommand(2600), // Starts spinning wheels to shoot
+                hood.positionCommand(0.32) // Moves to position until within tolerance
             )
         );
-        depotToShootingPose.done().onTrue(
-            Commands.sequence(
+        depotToShootingPose.done().onTrue( // Executes once in shooting position
+            Commands.sequence( // One after another
                 subsystemCommands.aimAndShoot()
                     .withTimeout(5), // shoot, stop after at most 5s
                 shootingPoseToTower.cmd()
             )
         );
 
-        shootingPoseToTower.active().whileTrue(limelight.idle());
-        shootingPoseToTower.active().onTrue(hanger.positionCommand(Hanger.Position.HANGING));
-        shootingPoseToTower.done().onTrue(hanger.positionCommand(Hanger.Position.HUNG));
+        shootingPoseToTower.active().whileTrue(limelight.idle()); // Move to tower when limelight is idle
+        shootingPoseToTower.active().onTrue(hanger.positionCommand(Hanger.Position.HANGING)); // Activates tower command when in hanging position
+        shootingPoseToTower.done().onTrue(hanger.positionCommand(Hanger.Position.HUNG)); // Finishes tower command when position is in hung
 
-        // the end
-        return routine;
+        return routine; // Finishes routine
     }
 }
