@@ -85,7 +85,7 @@ public final class AutoRoutines {
         routine.active().onTrue(
             Commands.sequence(
                 startToOutpost.resetOdometry(),
-                startToOutpost.cmd() //reset odo, checks if valid traj in, if not, begin
+                startToOutpost.cmd() // follow traj to outpost
             )
         );
 
@@ -107,14 +107,14 @@ public final class AutoRoutines {
         depotToShootingPose.active().whileTrue(limelight.idle());
         depotToShootingPose.atTime(0.5).onTrue(
             Commands.parallel(
-                shooter.spinUpCommand(2600),
+                shooter.spinUpCommand(2600), // get in pos and prepare. wait for tolerance
                 hood.positionCommand(0.32)
             )
         );
         depotToShootingPose.done().onTrue(
             Commands.sequence(
                 subsystemCommands.aimAndShoot()
-                    .withTimeout(5),
+                    .withTimeout(5), // shoot, stop after at most 5s
                 shootingPoseToTower.cmd()
             )
         );
@@ -123,6 +123,7 @@ public final class AutoRoutines {
         shootingPoseToTower.active().onTrue(hanger.positionCommand(Hanger.Position.HANGING));
         shootingPoseToTower.done().onTrue(hanger.positionCommand(Hanger.Position.HUNG));
 
+        // the end
         return routine;
     }
 }
