@@ -1,11 +1,18 @@
 package frc.robot;
 
 import com.ctre.phoenix6.CANBus;
+import com.ctre.phoenix6.hardware.CANdle;
+import frc.robot.subsystems.LED8;
 
 public final class Ports {
+
     // CAN Buses
     public static final CANBus kRoboRioCANBus = new CANBus("rio");
     public static final CANBus kCANivoreCANBus = new CANBus("main");
+
+    // CANdle
+    public static final CANdle kCANdle = new CANdle(0);
+    public static final LED8 kCandle = new LED8(kCANdle);
 
     // Talon FX IDs
     public static final int kIntakePivot = 10;
