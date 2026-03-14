@@ -29,7 +29,9 @@ public class ColorSequence {
     private long counter = 0;
     public void tick(int refreshRate) {
         if (colors.length == 0) return;
-        led.setColor(colors[(int)(counter*refreshRate % Math.max(1,speed))],zIndex);
+        long phase = counter * refreshRate % Math.max(1, speed);
+        int colorIndex = (int)(phase % colors.length);
+        led.setColor(colors[colorIndex], zIndex);
         counter++;
     }
 
