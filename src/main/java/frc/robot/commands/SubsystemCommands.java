@@ -21,8 +21,8 @@ public final class SubsystemCommands {
     private final Hood hood;
     private final Hanger hanger;
 
-    private final DoubleSupplier forwardInput;
-    private final DoubleSupplier leftInput;
+    private final DoubleSupplier yInput;
+    private final DoubleSupplier xInput;
 
     public SubsystemCommands(
         Swerve swerve,
@@ -43,8 +43,8 @@ public final class SubsystemCommands {
         this.hood = hood;
         this.hanger = hanger;
 
-        this.forwardInput = forwardInput;
-        this.leftInput = leftInput;
+        this.yInput = forwardInput;
+        this.xInput = leftInput;
     }
 
     public SubsystemCommands(
@@ -70,7 +70,7 @@ public final class SubsystemCommands {
     }
 
     public Command aimAndShoot() {
-        final AimAndDriveCommand aimAndDriveCommand = new AimAndDriveCommand(swerve, forwardInput, leftInput);
+        final AimAndDriveCommand aimAndDriveCommand = new AimAndDriveCommand(swerve, yInput, xInput);
         final PrepareShotCommand prepareShotCommand = new PrepareShotCommand(shooter, hood, () -> swerve.getState().Pose);
         return Commands.parallel(
             aimAndDriveCommand,
@@ -84,7 +84,7 @@ public final class SubsystemCommands {
     public Command shootManually() {
         return shooter.dashboardSpinUpCommand()
             .andThen(feed())
-            .handleInterrupt(() -> shooter.stop());
+            .handleInterrupt(shooter::stop);
     }
 
     private Command feed() {
