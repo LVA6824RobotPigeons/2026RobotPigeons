@@ -32,23 +32,23 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.KrakenX60;
 import frc.robot.Ports;
 
-public class Intake extends SubsystemBase {
-    public enum Speed {
-        STOP(0),
-        INTAKE(0.8);
+public class Intake extends SubsystemBase { //makes it public
+    public enum Speed { //speedy
+        STOP(0), //you stop it
+        INTAKE(0.8); //relative to how you control it
 
-        private final double percentOutput;
+        private final double percentOutput; //control the persengtage out to the stop variable
 
         private Speed(double percentOutput) {
             this.percentOutput = percentOutput;
-        }
+        } //set how fast it go, out of its maximum speed
 
         public Voltage voltage() {
             return Volts.of(percentOutput * 12.0);
-        }
+        } //sets  persentage for voltage
     }
 
-    public enum Position {
+    public enum Position { //points of areas
         HOMED(110),
         STOWED(100),
         INTAKE(-4),
@@ -58,21 +58,21 @@ public class Intake extends SubsystemBase {
 
         private Position(double degrees) {
             this.degrees = degrees;
-        }
+        }  //sets degrees and postitions
 
         public Angle angle() {
             return Degrees.of(degrees);
-        }
+        } //angles!!
     }
 
     private static final double kPivotReduction = 50.0;
     private static final AngularVelocity kMaxPivotSpeed = KrakenX60.kFreeSpeed.div(kPivotReduction);
-    private static final Angle kPositionTolerance = Degrees.of(5);
+    private static final Angle kPositionTolerance = Degrees.of(5); //angles with speed
 
     private final TalonFX pivotMotor, rollerMotor;
     private final VoltageOut pivotVoltageRequest = new VoltageOut(0);
     private final MotionMagicVoltage pivotMotionMagicRequest = new MotionMagicVoltage(0).withSlot(0);
-    private final VoltageOut rollerVoltageRequest = new VoltageOut(0);
+    private final VoltageOut rollerVoltageRequest = new VoltageOut(0); //adding motion to all of it
 
     private boolean isHomed = false;
 
@@ -82,7 +82,7 @@ public class Intake extends SubsystemBase {
         configurePivotMotor();
         configureRollerMotor();
         SmartDashboard.putData(this);
-    }
+    }//connecting motor with intake
 
     private void configurePivotMotor() {
         final TalonFXConfiguration config = new TalonFXConfiguration()
@@ -97,18 +97,18 @@ public class Intake extends SubsystemBase {
                     .withStatorCurrentLimitEnable(true)
                     .withSupplyCurrentLimit(Amps.of(70))
                     .withSupplyCurrentLimitEnable(true)
-            )
+            )//intake persentages
             .withFeedback(
                 new FeedbackConfigs()
                     .withFeedbackSensorSource(FeedbackSensorSourceValue.RotorSensor)
                     .withSensorToMechanismRatio(kPivotReduction)
-            )
+            )//conning intake to feedback
             .withMotionMagic(
                 new MotionMagicConfigs()
                     .withMotionMagicCruiseVelocity(kMaxPivotSpeed)
                     .withMotionMagicAcceleration(kMaxPivotSpeed.per(Second))
             )
-            .withSlot0(
+            .withSlot0(//maximum speed per secound
                 new Slot0Configs()
                     .withKP(300)
                     .withKI(0)
@@ -124,14 +124,14 @@ public class Intake extends SubsystemBase {
                 new MotorOutputConfigs()
                     .withInverted(InvertedValue.Clockwise_Positive)
                     .withNeutralMode(NeutralModeValue.Brake)
-            )
+            )//setting up brakes
             .withCurrentLimits(
                 new CurrentLimitsConfigs()
                     .withStatorCurrentLimit(Amps.of(120))
                     .withStatorCurrentLimitEnable(true)
                     .withSupplyCurrentLimit(Amps.of(70))
                     .withSupplyCurrentLimitEnable(true)
-            );
+            );//confirgring the limits
         rollerMotor.getConfigurator().apply(config);
     }
 
@@ -145,7 +145,7 @@ public class Intake extends SubsystemBase {
         pivotMotor.setControl(
             pivotVoltageRequest
                 .withOutput(Volts.of(percentOutput * 12.0))
-        );
+        ); //something
     }
 
     public void set(Position position) {
@@ -160,7 +160,7 @@ public class Intake extends SubsystemBase {
             rollerVoltageRequest
                 .withOutput(speed.voltage())
         );
-    }
+    }  //setting speed and postion as a set control
 
     public Command intakeCommand() {
         return startEnd(
@@ -180,7 +180,7 @@ public class Intake extends SubsystemBase {
                     Commands.waitUntil(this::isPositionWithinTolerance),
                     runOnce(() -> set(Position.INTAKE)),
                     Commands.waitUntil(this::isPositionWithinTolerance)
-                )
+                ) //making a sequence opf putting postion relative to speed
                 .repeatedly()
             )
             .handleInterrupt(() -> {
@@ -197,7 +197,7 @@ public class Intake extends SubsystemBase {
                 pivotMotor.setPosition(Position.HOMED.angle());
                 isHomed = true;
                 set(Position.STOWED);
-            })
+            }) //postion is wait and apply in amplitude
         )
         .unless(() -> isHomed)
         .withInterruptBehavior(InterruptionBehavior.kCancelIncoming);
@@ -211,4 +211,5 @@ public class Intake extends SubsystemBase {
         builder.addDoubleProperty("Pivot Supply Current", () -> pivotMotor.getSupplyCurrent().getValue().in(Amps), null);
         builder.addDoubleProperty("Roller Supply Current", () -> rollerMotor.getSupplyCurrent().getValue().in(Amps), null);
     }
-}
+}//finshed code with making everything connected to intake
+//Comments made By Gabe
