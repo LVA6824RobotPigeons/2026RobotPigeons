@@ -10,6 +10,9 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.subsystems.ColorSequence;
+import frc.robot.subsystems.LED8;
+import frc.robot.subsystems.LEDManager;
 
 /**
  * The methods in this class are called automatically corresponding to each mode, as described in
@@ -49,5 +52,7 @@ public class Robot extends TimedRobot {
         // block in order for anything in the Command-based framework to work.
         CommandScheduler.getInstance().run();
         if(Main.use_cm_controller_selection) org.py.cmm5.Main.process();
+        Ports.kCandle.process();
+        ColorSequence.process(20);
     }
 }

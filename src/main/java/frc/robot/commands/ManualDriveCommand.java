@@ -5,6 +5,7 @@ import static edu.wpi.first.units.Units.Seconds;
 import java.util.Optional;
 import java.util.function.DoubleSupplier;
 
+import com.ctre.phoenix6.signals.RGBWColor;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveModule.SteerRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
@@ -13,7 +14,10 @@ import com.ctre.phoenix6.swerve.SwerveRequest.ForwardPerspectiveValue;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.wpilibj2.command.Command;
+import frc.robot.Constants;
 import frc.robot.Constants.Driving;
+import frc.robot.Ports;
+import frc.robot.subsystems.LEDManager;
 import frc.robot.subsystems.Swerve;
 import frc.util.DriveInputSmoother;
 import frc.util.ManualDriveInput;
@@ -106,6 +110,16 @@ public class ManualDriveCommand extends Command {
 
     @Override
     public void execute() {
+
+        Ports.kCandle.setColorSequence(
+                new RGBWColor[] {
+                        Constants.LEDs.kGreen,
+                        Constants.LEDs.kRed
+                },
+                400,
+                1
+        );
+
         final ManualDriveInput input = inputSmoother.getSmoothedInput(); // Smooths input to be less jagged
         if (input.hasRotation()) {
             // If rotation is > 0
