@@ -71,9 +71,8 @@ public class AimAndDriveCommand extends Command {
     }
 
     @Override
-    public void execute() {
-
-        // Sets color to Michaenta
+    public void initialize() {
+        // Sets color sequence once when the command starts
         Ports.kCandle.setColorSequence(
                 new RGBWColor[] {
                         Constants.LEDs.kRed,
@@ -82,7 +81,11 @@ public class AimAndDriveCommand extends Command {
                 800,
                 1
         );
-//Sets up kcandle as port
+    }
+
+    @Override
+    public void execute() {
+        // Sets up kcandle as port
         final ManualDriveInput input = inputSmoother.getSmoothedInput(); // Smooths out input to make it more spherical
         // Sets up swerve to always face the hub, while still driving as normal
         swerve.setControl(
