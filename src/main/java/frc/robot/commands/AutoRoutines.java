@@ -75,29 +75,29 @@ public final class AutoRoutines {
     private AutoRoutine outpostAndDepotRoutine() {
         /* Auto routine for driving around between depot and outpost to collect ball */
 
-        // init vars
-        final AutoRoutine routine = autoFactory.newRoutine("Outpost and Depot");
+        final AutoRoutine routine = autoFactory.newRoutine("Outpost and Depot"); // Makes new routine
         final AutoTrajectory startToOutpost = OutpostAndDepotTrajectory$0.asAutoTraj(routine);
         final AutoTrajectory outpostToDepot = OutpostAndDepotTrajectory$1.asAutoTraj(routine);
         final AutoTrajectory depotToShootingPose = OutpostAndDepotTrajectory$2.asAutoTraj(routine);
         final AutoTrajectory shootingPoseToTower = OutpostAndDepotTrajectory$3.asAutoTraj(routine);
 
+        // Overview: Start by moving to outpost
         routine.active().onTrue(
             Commands.sequence(
-                startToOutpost.resetOdometry(),
-                startToOutpost.cmd() // follow traj to outpost
+                startToOutpost.resetOdometry(), // Resets "movement tracker"
+                startToOutpost.cmd() // Move to outpost (The area where balls are loaded by people
             )
         );
 
-        routine.observe(hanger::isHomed).onTrue(
+        // Overview: When hanger is homed, wait 0.5s then move to intake position
+        routine.observe(hanger::isHomed).onTrue( // Only executed if hanger is homed
             Commands.sequence(
-                Commands.waitSeconds(0.5),
-                intake.runOnce(() -> intake.set(Intake.Position.INTAKE))  // if homed, head to position of balls
+                Commands.waitSeconds(0.5), // Waits a bit (Very small amount)
+                intake.runOnce(() -> intake.set(Intake.Position.INTAKE))  // Move to intake position
             )
         );
 
-        // after a given delay (1s), execute outpost to depot routine
-        startToOutpost.doneDelayed(1).onTrue(outpostToDepot.cmd());
+        startToOutpost.doneDelayed(1).onTrue(outpostToDepot.cmd()); // After 1 second, it will return to depot
 
         // once in position, prepare to shoot
         outpostToDepot.atTimeBeforeEnd(1).onTrue(intake.intakeCommand());
