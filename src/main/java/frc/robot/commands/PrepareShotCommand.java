@@ -33,7 +33,6 @@ public class PrepareShotCommand extends Command {
     );
 
     static {
-        //
         distanceToShotMap.put(Inches.of(52.0), new Shot(2800, 0.19));
         distanceToShotMap.put(Inches.of(114.4), new Shot(3275, 0.40));
         distanceToShotMap.put(Inches.of(165.5), new Shot(3650, 0.48));
@@ -43,22 +42,23 @@ public class PrepareShotCommand extends Command {
     private final Hood hood;
     private final Supplier<Pose2d> robotPoseSupplier;
 
-    // set reqs and pose dat to prepare for shooting
+    // Sets up data and requirments
     public PrepareShotCommand(Shooter shooter, Hood hood, Supplier<Pose2d> robotPoseSupplier) {
         this.shooter = shooter;
         this.hood = hood;
         this.robotPoseSupplier = robotPoseSupplier;
-        addRequirements(shooter, hood);
+        addRequirements(shooter, hood); // Requires shooter and hoot for command I think
     }
 
     public boolean isReadyToShoot() {
-        return shooter.isVelocityWithinTolerance() && hood.isPositionWithinTolerance(); // gives if in tol. returns dalse if not
+        //  Returns true if the wheels are going fast enough, and if the position is correct enough
+        return shooter.isVelocityWithinTolerance() && hood.isPositionWithinTolerance(); // "gives if in tol. returns dalse if not" - Mike
     }
 
     private Distance getDistanceToHub() {
         final Translation2d robotPosition = robotPoseSupplier.get().getTranslation();
         final Translation2d hubPosition = Landmarks.hubPosition();
-        return Meters.of(robotPosition.getDistance(hubPosition)); // get our dist by getting abs of our pos - hub pos. meters for baseness. euclid dist
+        return Meters.of(robotPosition.getDistance(hubPosition)); // Gets distance to hub in meters
     }
 
     @Override
@@ -67,11 +67,12 @@ public class PrepareShotCommand extends Command {
         final Shot shot = distanceToShotMap.get(distanceToHub);
         shooter.setRPM(shot.shooterRPM);
         hood.setPosition(shot.hoodPosition);
-        SmartDashboard.putNumber("Distance to Hub (inches)", distanceToHub.in(Inches)); // compute dist, looks up interpolated shot, sets shooter RPM, sets hood position, publishes dist
+        SmartDashboard.putNumber("Distance to Hub (inches)", distanceToHub.in(Inches)); // Adds to smart dashboard
     }
 
     @Override
     public boolean isFinished() {
+        // Runs infinitely until stopped
         return false;
     }
 
