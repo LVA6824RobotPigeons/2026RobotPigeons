@@ -14,7 +14,7 @@ public class LED8 {
         this.manager = new LEDManager();
         this.candle = candle;
         setColor(new RGBWColor(0,0,0),0);
-    }//Sets colour as white
+    } // Sets colour to black (off)
     public LED8 setColor(RGBWColor color,int zIndex) {
         manager.set(color,zIndex);
         process();
