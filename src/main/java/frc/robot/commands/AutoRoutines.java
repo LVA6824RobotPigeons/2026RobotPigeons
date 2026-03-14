@@ -109,8 +109,8 @@ public final class AutoRoutines {
         depotToShootingPose.done().onTrue( // Executes once in shooting position
             Commands.sequence( // One after another
                 subsystemCommands.aimAndShoot()
-                    .withTimeout(5), // shoot, stop after at most 5s
-                shootingPoseToTower.cmd()
+                    .withTimeout(5), // Aims and shoots, but force killed after 5 seconds
+                shootingPoseToTower.cmd() // Starts moving to tower
             )
         );
 
