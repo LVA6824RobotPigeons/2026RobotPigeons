@@ -27,21 +27,21 @@ public class AimAndDriveCommand extends Command {
     private final DriveInputSmoother inputSmoother;
 
     private final SwerveRequest.FieldCentricFacingAngle fieldCentricFacingAngleRequest = new SwerveRequest.FieldCentricFacingAngle()
-        .withRotationalDeadband(Driving.kPIDRotationDeadband)
-        .withMaxAbsRotationalRate(Driving.kMaxRotationalRate)
-        .withDriveRequestType(DriveRequestType.OpenLoopVoltage)
-        .withSteerRequestType(SteerRequestType.MotionMagicExpo)
-        .withForwardPerspective(ForwardPerspectiveValue.OperatorPerspective)
+        .withRotationalDeadband(Driving.kPIDRotationDeadband) // Sets value for smoothing rotational change
+        .withMaxAbsRotationalRate(Driving.kMaxRotationalRate) // Sets maximum rotation speed
+        .withDriveRequestType(DriveRequestType.OpenLoopVoltage) // Sets the allowed request type to Open Loop Voltage
+        .withSteerRequestType(SteerRequestType.MotionMagicExpo)  // "Control the drive motor using a Motion Magic® Expo request." - Docs
+        .withForwardPerspective(ForwardPerspectiveValue.OperatorPerspective) // Sets the perspective of the operator
         .withHeadingPID(5, 0, 0);
 
     public AimAndDriveCommand(
-        Swerve swerve,
-        DoubleSupplier forwardInput,
-        DoubleSupplier leftInput
+        Swerve swerve, // Swerve details and stuff
+        DoubleSupplier yInput, // Swerve Joystick Y axis
+        DoubleSupplier xInput // Swerve Joystick X axis
     ) {
-        this.swerve = swerve;
-        this.inputSmoother = new DriveInputSmoother(forwardInput, leftInput);
-        addRequirements(swerve);
+        this.swerve = swerve; // Sets swerve stuff
+        this.inputSmoother = new DriveInputSmoother(yInput, xInput); // Makes the input for smooth
+        addRequirements(swerve); // Makes sure swerve doesn't execute alongside anything else
     }
 
     /*public AimAndDriveCommand(Swerve swerve) {
@@ -49,7 +49,8 @@ public class AimAndDriveCommand extends Command {
     }*/
 
     /**
-     * @return Returns if it SHOULD aim, not if it IS aimed.
+     * @return Returns if robot is pointing close enough to the hub to shoot.
+     * (Based on {@link #kAimTolerance frc.robot.commands.AimAndDriveCommand.kAimTolerance})
      */
     public boolean isAimed() {
         final Rotation2d targetHeading = fieldCentricFacingAngleRequest.TargetDirection;
@@ -62,7 +63,7 @@ public class AimAndDriveCommand extends Command {
         final Translation2d hubPosition = Landmarks.hubPosition(); // Gets hub based on team (meters)
         final Translation2d robotPosition = swerve.getState().Pose.getTranslation(); // Gets robot position (meters)
         final Rotation2d hubDirectionInBlueAlliancePerspective = hubPosition.minus(robotPosition).getAngle(); // Gets absolute rotation (Based on the default reference point, which is blue alliance)
-        return hubDirectionInBlueAlliancePerspective.rotateBy(swerve.getOperatorForwardDirection());
+        return hubDirectionInBlueAlliancePerspective.rotateBy(swerve.getOperatorForwardDirection()); // Converts the angle to the operator's pov
     }
 
     @Override
