@@ -40,16 +40,16 @@ public class ManualDriveCommand extends Command {
     private final SwerveRequest.Idle idleRequest = new SwerveRequest.Idle();
 
     private final SwerveRequest.FieldCentric fieldCentricRequest = new SwerveRequest.FieldCentric()
-        .withDriveRequestType(DriveRequestType.OpenLoopVoltage)
-        .withSteerRequestType(SteerRequestType.MotionMagicExpo)
-        .withForwardPerspective(ForwardPerspectiveValue.OperatorPerspective);
+        .withDriveRequestType(DriveRequestType.OpenLoopVoltage) // Sets drive request type to Open Loop Voltage
+        .withSteerRequestType(SteerRequestType.MotionMagicExpo) // Sets steer request type to Magic Magic Expo
+        .withForwardPerspective(ForwardPerspectiveValue.OperatorPerspective); // Sets perspective to the operator's
 
     private final SwerveRequest.FieldCentricFacingAngle fieldCentricFacingAngleRequest = new SwerveRequest.FieldCentricFacingAngle()
-        .withRotationalDeadband(Driving.kPIDRotationDeadband)
-        .withMaxAbsRotationalRate(Driving.kMaxRotationalRate)
-        .withDriveRequestType(DriveRequestType.OpenLoopVoltage)
-        .withSteerRequestType(SteerRequestType.MotionMagicExpo)
-        .withForwardPerspective(ForwardPerspectiveValue.OperatorPerspective)
+        .withRotationalDeadband(Driving.kPIDRotationDeadband) // Sets how much to smooth input
+        .withMaxAbsRotationalRate(Driving.kMaxRotationalRate) // Sets maximum speed
+        .withDriveRequestType(DriveRequestType.OpenLoopVoltage) // Sets drive request type to Open Loop Voltage
+        .withSteerRequestType(SteerRequestType.MotionMagicExpo) // Sets steer request type to Motion Magic Expo
+        .withForwardPerspective(ForwardPerspectiveValue.OperatorPerspective) // Sets perspective to the operator's
         .withHeadingPID(5, 0, 0);
 
     private State currentState = State.IDLING;
