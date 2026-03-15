@@ -31,7 +31,7 @@ public class Shooter extends SubsystemBase {
     private static final AngularVelocity kVelocityTolerance = RPM.of(100);
 
     private final TalonFX leftMotor, middleMotor, rightMotor;
-    private final List<TalonFX> motors;
+    public final List<TalonFX> motors;
     private final VelocityVoltage velocityRequest = new VelocityVoltage(0).withSlot(0);
     private final VoltageOut voltageRequest = new VoltageOut(0);
 
@@ -50,7 +50,11 @@ public class Shooter extends SubsystemBase {
         SmartDashboard.putData(this);
     }
 
-    private void configureMotor(TalonFX motor, InvertedValue invertDirection) {
+    private /* parts */ void configureMotor(TalonFX motor, InvertedValue invertDirection) {
+        motor.getConfigurator().apply(createConfiguration(invertDirection));
+    }
+
+    public static TalonFXConfiguration createConfiguration(InvertedValue invertDirection) {
         final TalonFXConfiguration config = new TalonFXConfiguration()
             .withMotorOutput(
                 new MotorOutputConfigs()
@@ -75,9 +79,10 @@ public class Shooter extends SubsystemBase {
                     .withKD(0)
                     .withKV(12.0 / KrakenX60.kFreeSpeed.in(RotationsPerSecond)) // 12 volts when requesting max RPS
             );
-        
-        motor.getConfigurator().apply(config);
+        return config;
     }
+
+
 
     public void setRPM(double rpm) {
         for (final TalonFX motor : motors) {
@@ -123,6 +128,10 @@ public class Shooter extends SubsystemBase {
         builder.addDoubleProperty(name + " RPM", () -> motor.getVelocity().getValue().in(RPM), null);
         builder.addDoubleProperty(name + " Stator Current", () -> motor.getStatorCurrent().getValue().in(Amps), null);
         builder.addDoubleProperty(name + " Supply Current", () -> motor.getSupplyCurrent().getValue().in(Amps), null);
+    }
+
+    List<TalonFX> motorsForTesting() {
+        return motors;
     }
 
     @Override

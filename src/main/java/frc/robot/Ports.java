@@ -11,7 +11,7 @@ public final class Ports {
     public static final CANBus kCANivoreCANBus = new CANBus("main");
 
     // CANdle
-    public static final CANdle kCANdle = new CANdle(0);
+    public static final CANdle kCANdle = new CANdle(0,kRoboRioCANBus);
     public static final LED8 kCandle = new LED8(kCANdle);
 
     // Talon FX IDs

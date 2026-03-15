@@ -6,6 +6,7 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.Volts;
 
+import com.ctre.phoenix6.signals.RGBWColor;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -36,6 +37,18 @@ public class Robot extends TimedRobot {
         SmartDashboard.putData(CommandScheduler.getInstance());
         RobotController.setBrownoutVoltage(Volts.of(6.1));
         if(Main.use_cm_controller_selection) org.py.cmm5.Main.init();
+        Ports.kCandle.setColor(
+                new RGBWColor[] {
+                        Constants.LEDs.kRed,
+                        Constants.LEDs.kYellow,
+                        Constants.LEDs.kGreen,
+                        Constants.LEDs.kCyan,
+                        Constants.LEDs.kBlue,
+                        Constants.LEDs.kMichenta
+                },
+                300,
+                -1
+        );
     }
     
     /**
