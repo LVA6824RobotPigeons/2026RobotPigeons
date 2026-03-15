@@ -3,6 +3,7 @@ package frc.robot.subsystems;
 import com.ctre.phoenix6.signals.RGBWColor;
 
 import java.util.ArrayList;
+import java.util.function.BiConsumer;
 
 public class ColorSequence {
 
@@ -14,12 +15,16 @@ public class ColorSequence {
     }
 
     private final RGBWColor[] colors;
-    private final LED8 led;
+    private final BiConsumer<RGBWColor, Integer> colorSink;
     private final long stepIntervalMs;
     private final int zIndex;
 
     public ColorSequence(LED8 led, RGBWColor[] colors, long speed, int zIndex) {
-        this.led = led;
+        this((color, layer) -> led.setColor(color, layer), colors, speed, zIndex);
+    }
+
+    ColorSequence(BiConsumer<RGBWColor, Integer> colorSink, RGBWColor[] colors, long speed, int zIndex) {
+        this.colorSink = colorSink;
         this.colors = colors;
         this.stepIntervalMs = Math.max(1, speed);
         this.zIndex = zIndex;
@@ -28,14 +33,9 @@ public class ColorSequence {
 
     private long elapsedMs = 0;
     public void tick(int refreshRateMs) {
-        /*
-        * fixed ticking to be time based
-        * old math was funky, and w/speed=400 and colors.length=2, phase is always even (0,20,40...), so phase % 2 == 0 forever. not good
-        * now we tie to time. very nice. :)
-        */
         if (colors.length == 0) return;
         int colorIndex = (int)((elapsedMs / stepIntervalMs) % colors.length);
-        led.setColor(colors[colorIndex], zIndex);
+        colorSink.accept(colors[colorIndex], zIndex);
         elapsedMs += Math.max(1, refreshRateMs);
     }
 

@@ -28,21 +28,9 @@ public class LED8 {
         this.colorSequence = new ColorSequence(this,sequence,speed,zIndex);
 
     }
-    /*
-    * here i added a kOff constant.
-    * if manager is null, we should be off.
-    * since we manually manage our states, null is a valid state to be in.
-    * but our old code would try to read the R val of null and throw a nullptr error.
-    * very bad.
-    *
-    * so instead, we fall back to black now! :D
-     */
     public void process() {
 
-        RGBWColor current = manager.getCurrentColor();
-        if (current == null) {
-            current = kOff;
-        }
+        RGBWColor current = resolveColorOrOff(manager.getCurrentColor());
         candle.setControl(
                 new SolidColor(kStartLED, kNumberOfLights-1+kStartLED).withColor(
                         new RGBWColor(
@@ -53,6 +41,10 @@ public class LED8 {
                 )
         );
 
+    }
+
+    static RGBWColor resolveColorOrOff(RGBWColor color) {
+        return color == null ? kOff : color;
     }
 
 }
