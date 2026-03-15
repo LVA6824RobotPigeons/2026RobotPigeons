@@ -12,9 +12,11 @@ import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.VoltageConfigs;
+import com.ctre.phoenix6.controls.ControlRequest;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.ControlModeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
@@ -27,8 +29,9 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.KrakenX60;
 import frc.robot.Ports;
 
-public class Shooter extends SubsystemBase {
+public class Shooter extends SubsystemBase implements AutoCloseable {
     private static final AngularVelocity kVelocityTolerance = RPM.of(100);
+
 
     private final TalonFX leftMotor, middleMotor, rightMotor;
     public final List<TalonFX> motors;
@@ -52,6 +55,10 @@ public class Shooter extends SubsystemBase {
 
     private /* parts */ void configureMotor(TalonFX motor, InvertedValue invertDirection) {
         motor.getConfigurator().apply(createConfiguration(invertDirection));
+    }
+
+    public void close() {
+        motors.forEach(TalonFX::close);
     }
 
     public static TalonFXConfiguration createConfiguration(InvertedValue invertDirection) {
@@ -117,11 +124,16 @@ public class Shooter extends SubsystemBase {
 
     public boolean isVelocityWithinTolerance() {
         return motors.stream().allMatch(motor -> {
-            final boolean isInVelocityMode = motor.getAppliedControl().equals(velocityRequest);
+            final boolean isInVelocityMode =
+                    motor.getControlMode().getValue() == ControlModeValue.VelocityVoltage;
             final AngularVelocity currentVelocity = motor.getVelocity().getValue();
-            final AngularVelocity targetVelocity = velocityRequest.getVelocityMeasure();
+            final AngularVelocity targetVelocity =
+                    RotationsPerSecond.of(motor.getClosedLoopReference().getValueAsDouble());
             return isInVelocityMode && currentVelocity.isNear(targetVelocity, kVelocityTolerance);
         });
+    }
+    public AngularVelocity getVelocity(int index) {
+        return motors.get(index).getVelocity().getValue();
     }
 
     private void initSendable(SendableBuilder builder, TalonFX motor, String name) {

@@ -1,5 +1,6 @@
 package frc.robot.subsystems;
 
+import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -57,8 +58,7 @@ public class ShooterManipulatorTest {
     void DESTRUCTION() {
         CommandScheduler.getInstance().cancelAll();
         CommandScheduler.getInstance().run();
-        shooter = null;
-        motors = null;
+        shooter.close();
     }
 
     private void setAllMeasuredVelocity(double rpm) {
@@ -85,14 +85,15 @@ public class ShooterManipulatorTest {
         waitForControlToApply();
 
         for (TalonFX motor : motors) {
-            var mode = motor.getControlMode();
-            var voltage = motor.getMotorVoltage();
+            var mode = motor.getControlMode(false);
+            var voltage = motor.getMotorVoltage(false);
+            BaseStatusSignal.waitForAll(0.1,mode,voltage);
 
             mode.waitForUpdate(0.1);
             voltage.waitForUpdate(0.1);
 
             assertEquals(ControlModeValue.VoltageOut, mode.getValue());
-            assertEquals(6.0, voltage.getValueAsDouble(), EPS);
+            assertEquals(6.0, Math.abs(voltage.getValueAsDouble()), EPS);
         }
     }
 
@@ -105,7 +106,7 @@ public class ShooterManipulatorTest {
         waitForControlToApply();
 
         for (TalonFX motor : motors) {
-            StatusSignal<Voltage> voltage = motor.getMotorVoltage();
+            var voltage = motor.getMotorVoltage();
             voltage.waitForUpdate(0.1);
             assertEquals(0.0,voltage.getValue().in(voltage.getValue().baseUnit()),EPS);
         }
@@ -120,16 +121,13 @@ public class ShooterManipulatorTest {
          waitForControlToApply();
 
         for (TalonFX motor : motors) {
-            StatusSignal<ControlModeValue> mode = motor.getControlMode();
-            StatusSignal<Double> reference = motor.getClosedLoopReference();
-            StatusSignal<Integer> slot = motor.getClosedLoopSlot();
-
-            mode.waitForUpdate(0.1);
-            reference.waitForUpdate(0.1);
-            slot.waitForUpdate(0.1);
+            var mode = motor.getControlMode(false);
+            var reference = motor.getClosedLoopReference(false);
+            var slot = motor.getClosedLoopSlot(false);
+            BaseStatusSignal.waitForAll(.1, mode, reference, slot);
 
             assertEquals(ControlModeValue.VelocityVoltage, mode.getValue());
-            assertEquals(targetRps, reference.getValue(), EPS);
+            assertEquals(targetRps, Math.abs(reference.getValue()), EPS);
             assertEquals(0, slot.getValue(), EPS);
         }
     }
@@ -170,7 +168,7 @@ public class ShooterManipulatorTest {
             Wababbing()
             Assert()
             Assert()
-            FALSE()
+            false()
         }*/
 
     }
@@ -183,6 +181,7 @@ public class ShooterManipulatorTest {
         setAllMeasuredVelocity(3000);
         setMeasuredVelocityRPM(1, 2800);
 
+        System.out.println(shooter.getVelocity(0));
         assertFalse(shooter.isVelocityWithinTolerance());
     }
 
