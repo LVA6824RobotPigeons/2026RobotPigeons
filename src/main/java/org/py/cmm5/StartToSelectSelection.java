@@ -162,7 +162,7 @@ public class StartToSelectSelection {
         Main.selectedJIDs = selectedJIDs;
         System.out.println("[ControlsManager:Polyware] Updated controllers: JIDs: " + selectedJIDs.toString());
         AllControls.ready = true;
-        frc.robot.Main.robot.m_robotContainer.refreshDriver();
+//        frc.robot.Main.robot.m_robotContainer.refreshDriver();
         AllControls.sandboxStart();
     }
 
