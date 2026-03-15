@@ -100,28 +100,24 @@ public class ManualDriveCommand extends Command {
     }
 
     @Override
-    /*
-    * i moved the scs to here now.
-    * we used to have it in execute, which is big nono
-    * it would be recreated every single tick so wed always be number 0, while always having deallocations and reallocations
-    * very bad.
-    *
-    * now we run it once, and keep the state tsable. yay :D
-     */
     public void initialize() {
         currentState = State.IDLING;
         lockedHeading = Optional.empty();
         headingLockStopwatch.reset();
         previousInput = new ManualDriveInput();
 
-        Ports.kCandle.setColorSequence(
+        Ports.kCandle.setColor(
             new RGBWColor[] {
-                Constants.LEDs.kGreen,
+                Constants.LEDs.kBlue,
                 Constants.LEDs.kRed
             },
             400,
             1
         );
+    }
+    @Override
+    public void end(boolean interrupted) {
+        Ports.kCandle.removeColor(1);
     }
 
     @Override
