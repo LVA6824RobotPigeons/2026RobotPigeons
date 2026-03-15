@@ -18,7 +18,6 @@ public class LED8 {
     } // Sets colour to black (off)
     public LED8 setColor(RGBWColor color,int zIndex) {
         manager.set(color,zIndex);
-        process();
         return this;
     }
 
@@ -28,8 +27,9 @@ public class LED8 {
         this.colorSequence = new ColorSequence(this,sequence,speed,zIndex);
 
     }
-    public void process() {
+    public void process(int refreshRate) {
 
+        colorSequence.tick(refreshRate);
         RGBWColor current = resolveColorOrOff(manager.getCurrentColor());
         candle.setControl(
                 new SolidColor(kStartLED, kNumberOfLights-1+kStartLED).withColor(
