@@ -65,13 +65,22 @@ public class PrepareShotCommand extends Command {
     }
 
     @Override
-    public void execute() {
+    public void initialize() {
 
         Ports.kCandle.setColor(
-                Constants.LEDs.kMichenta,
-                4
+                new RGBWColor[] {
+                        Constants.LEDs.kYellow,
+                        Constants.LEDs.kCyan,
+                        Constants.LEDs.kMichenta
+                },
+                100,
+                10
         );
 
+    }
+
+    @Override
+    public void execute() {
         final Distance distanceToHub = getDistanceToHub();
         final Shot shot = distanceToShotMap.get(distanceToHub);
         shooter.setRPM(shot.shooterRPM);
@@ -87,6 +96,7 @@ public class PrepareShotCommand extends Command {
 
     @Override
     public void end(boolean interrupted) {
+        Ports.kCandle.removeColor(10);
         shooter.stop(); // in the name of law!
     }
 

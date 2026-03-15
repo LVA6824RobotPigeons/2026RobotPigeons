@@ -18,7 +18,6 @@ import frc.robot.Constants;
 import frc.robot.Constants.Driving;
 import frc.robot.Landmarks;
 import frc.robot.Ports;
-import frc.robot.subsystems.ColorSequence;
 import frc.robot.subsystems.Swerve;
 import frc.util.DriveInputSmoother;
 import frc.util.GeometryUtil;
@@ -73,14 +72,15 @@ public class AimAndDriveCommand extends Command {
     @Override
     public void initialize() {
         // Sets color sequence once when the command starts
-        Ports.kCandle.setColorSequence(
-                new RGBWColor[] {
-                        Constants.LEDs.kRed,
-                        Constants.LEDs.kBlue
-                },
-                800,
-                1
+        Ports.kCandle.setColor(
+                Constants.LEDs.kYellow,
+                2
         );
+    }
+
+    @Override
+    public void end(boolean interrupted) {
+        Ports.kCandle.removeColor(2);
     }
 
     @Override

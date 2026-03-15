@@ -76,9 +76,17 @@ public final class SubsystemCommands {
 
         final Command ledOnCommand = Commands.runOnce(
             () -> Ports.kCandle.setColor(
-                Constants.LEDs.kCyan,
+                new RGBWColor[] {
+                        Constants.LEDs.kYellow,
+                        Constants.LEDs.kCyan,
+                        Constants.LEDs.kMichenta
+                },
+                100,
                 4
             )
+        );
+        final Command ledOffCommand = Commands.runOnce(
+                () -> Ports.kCandle.removeColor(4)
         );
 
         final AimAndDriveCommand aimAndDriveCommand = new AimAndDriveCommand(swerve, yInput, xInput);
@@ -92,13 +100,14 @@ public final class SubsystemCommands {
                     .andThen(prepareShotCommand),
                 Commands.waitUntil(() -> aimAndDriveCommand.isAimed() && prepareShotCommand.isReadyToShoot())
                     .andThen(feed())
+                        .andThen(ledOffCommand)
             )
         );
     }
 
     public Command shootManually() {
         return shooter.dashboardSpinUpCommand()
-            .andThen(feed()) // Feeds
+            .andThen(feed()) // Shoots them out I think
             .handleInterrupt(shooter::stop); // Stops shooter
     }
 
