@@ -12,9 +12,11 @@ import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.VoltageConfigs;
+import com.ctre.phoenix6.controls.ControlRequest;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.ControlModeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
@@ -27,11 +29,12 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.KrakenX60;
 import frc.robot.Ports;
 
-public class Shooter extends SubsystemBase {
+public class Shooter extends SubsystemBase implements AutoCloseable {
     private static final AngularVelocity kVelocityTolerance = RPM.of(100);
 
+
     private final TalonFX leftMotor, middleMotor, rightMotor;
-    private final List<TalonFX> motors;
+    public final List<TalonFX> motors;
     private final VelocityVoltage velocityRequest = new VelocityVoltage(0).withSlot(0);
     private final VoltageOut voltageRequest = new VoltageOut(0);
 
@@ -50,7 +53,15 @@ public class Shooter extends SubsystemBase {
         SmartDashboard.putData(this);
     }
 
-    private void configureMotor(TalonFX motor, InvertedValue invertDirection) {
+    private /* parts */ void configureMotor(TalonFX motor, InvertedValue invertDirection) {
+        motor.getConfigurator().apply(createConfiguration(invertDirection));
+    }
+
+    public void close() {
+        motors.forEach(TalonFX::close);
+    }
+
+    public static TalonFXConfiguration createConfiguration(InvertedValue invertDirection) {
         final TalonFXConfiguration config = new TalonFXConfiguration()
             .withMotorOutput(
                 new MotorOutputConfigs()
@@ -75,9 +86,10 @@ public class Shooter extends SubsystemBase {
                     .withKD(0)
                     .withKV(12.0 / KrakenX60.kFreeSpeed.in(RotationsPerSecond)) // 12 volts when requesting max RPS
             );
-        
-        motor.getConfigurator().apply(config);
+        return config;
     }
+
+
 
     public void setRPM(double rpm) {
         for (final TalonFX motor : motors) {
@@ -112,17 +124,26 @@ public class Shooter extends SubsystemBase {
 
     public boolean isVelocityWithinTolerance() {
         return motors.stream().allMatch(motor -> {
-            final boolean isInVelocityMode = motor.getAppliedControl().equals(velocityRequest);
+            final boolean isInVelocityMode =
+                    motor.getControlMode().getValue() == ControlModeValue.VelocityVoltage;
             final AngularVelocity currentVelocity = motor.getVelocity().getValue();
-            final AngularVelocity targetVelocity = velocityRequest.getVelocityMeasure();
+            final AngularVelocity targetVelocity =
+                    RotationsPerSecond.of(motor.getClosedLoopReference().getValueAsDouble());
             return isInVelocityMode && currentVelocity.isNear(targetVelocity, kVelocityTolerance);
         });
+    }
+    public AngularVelocity getVelocity(int index) {
+        return motors.get(index).getVelocity().getValue();
     }
 
     private void initSendable(SendableBuilder builder, TalonFX motor, String name) {
         builder.addDoubleProperty(name + " RPM", () -> motor.getVelocity().getValue().in(RPM), null);
         builder.addDoubleProperty(name + " Stator Current", () -> motor.getStatorCurrent().getValue().in(Amps), null);
         builder.addDoubleProperty(name + " Supply Current", () -> motor.getSupplyCurrent().getValue().in(Amps), null);
+    }
+
+    List<TalonFX> motorsForTesting() {
+        return motors;
     }
 
     @Override
