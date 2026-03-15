@@ -8,12 +8,13 @@ import static frc.robot.Constants.LEDs.kStartLED;
 
 public class LED8 {
 
+    private static final RGBWColor kOff = new RGBWColor(0,0,0);
     private final LEDManager manager;
     private final CANdle candle;
     public LED8(CANdle candle) {
         this.manager = new LEDManager();
         this.candle = candle;
-        setColor(new RGBWColor(0,0,0),0);
+        setColor(kOff,0);
     } // Sets colour to black (off)
     public LED8 setColor(RGBWColor color,int zIndex) {
         manager.set(color,zIndex);
@@ -27,10 +28,9 @@ public class LED8 {
         this.colorSequence = new ColorSequence(this,sequence,speed,zIndex);
 
     }
-
     public void process() {
 
-        RGBWColor current = manager.getCurrentColor();
+        RGBWColor current = resolveColorOrOff(manager.getCurrentColor());
         candle.setControl(
                 new SolidColor(kStartLED, kNumberOfLights-1+kStartLED).withColor(
                         new RGBWColor(
@@ -43,5 +43,8 @@ public class LED8 {
 
     }
 
-}
+    static RGBWColor resolveColorOrOff(RGBWColor color) {
+        return color == null ? kOff : color;
+    }
 
+}

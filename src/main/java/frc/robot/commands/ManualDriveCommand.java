@@ -17,7 +17,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants;
 import frc.robot.Constants.Driving;
 import frc.robot.Ports;
-import frc.robot.subsystems.LEDManager;
 import frc.robot.subsystems.Swerve;
 import frc.util.DriveInputSmoother;
 import frc.util.ManualDriveInput;
@@ -101,25 +100,32 @@ public class ManualDriveCommand extends Command {
     }
 
     @Override
+    /*
+    * i moved the scs to here now.
+    * we used to have it in execute, which is big nono
+    * it would be recreated every single tick so wed always be number 0, while always having deallocations and reallocations
+    * very bad.
+    *
+    * now we run it once, and keep the state tsable. yay :D
+     */
     public void initialize() {
         currentState = State.IDLING;
         lockedHeading = Optional.empty();
         headingLockStopwatch.reset();
         previousInput = new ManualDriveInput();
+
+        Ports.kCandle.setColorSequence(
+            new RGBWColor[] {
+                Constants.LEDs.kGreen,
+                Constants.LEDs.kRed
+            },
+            400,
+            1
+        );
     }
 
     @Override
     public void execute() {
-
-        Ports.kCandle.setColorSequence(
-                new RGBWColor[] {
-                        Constants.LEDs.kGreen,
-                        Constants.LEDs.kRed
-                },
-                400,
-                1
-        );
-
         final ManualDriveInput input = inputSmoother.getSmoothedInput(); // Smooths input to be less jagged
         if (input.hasRotation()) {
             // If rotation is > 0
