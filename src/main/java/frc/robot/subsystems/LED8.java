@@ -30,8 +30,9 @@ public class LED8 {
         if(manager.getCurrentZ() == zIndex) manager.remove(manager.getCurrentColor(),manager.getCurrentZ());
     }
     public void process(int refreshRate) {
-
-        colorSequence.tick(refreshRate);
+        if (colorSequence != null) {
+            colorSequence.tick(refreshRate);
+        }
         RGBWColor current = resolveColorOrOff(manager.getCurrentColor());
         candle.setControl(
                 new SolidColor(kStartLED, kNumberOfLights-1+kStartLED).withColor(

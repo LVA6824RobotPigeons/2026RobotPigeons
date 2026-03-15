@@ -21,14 +21,13 @@ import frc.robot.subsystems.LEDManager;
  */
 public class Robot extends TimedRobot {
     public final RobotContainer m_robotContainer;
-
-    public Robot getThis() { return this; }
     
     /**
      * This function is run when the robot is first started up and should be used for any
      * initialization code.
      */
     public Robot() {
+        //Main.robot = this;
         // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
         // autonomous chooser on the dashboard.
         //Main.robot = this;

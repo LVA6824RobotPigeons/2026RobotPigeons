@@ -70,6 +70,9 @@ public class Intake extends SubsystemBase { //makes it public
     private static final double kPivotReduction = 50.0;
     private static final AngularVelocity kMaxPivotSpeed = KrakenX60.kFreeSpeed.div(kPivotReduction);
     private static final Angle kPositionTolerance = Degrees.of(5); //angles with speed
+    private static final double kHomingPercentOutput = 0.1;
+    private static final double kHomingCurrentThresholdAmps = 6.0;
+    private static final double kHomingTimeoutSeconds = 3.0;
 
     private final TalonFX pivotMotor, rollerMotor;
     private final VoltageOut pivotVoltageRequest = new VoltageOut(0);
@@ -204,16 +207,25 @@ public class Intake extends SubsystemBase { //makes it public
 
     public Command homingCommand() {
         return Commands.sequence(
-            runOnce(() -> setPivotPercentOutput(0.1)),
-            Commands.waitUntil(() -> pivotMotor.getSupplyCurrent().getValue().in(Amps) > 6),
-            runOnce(() -> {
-                pivotMotor.setPosition(Position.HOMED.angle());
-                isHomed = true;
-                set(Position.STOWED);
-            }) //postion is wait and apply in amplitude
+            runOnce(() -> setPivotPercentOutput(kHomingPercentOutput)),
+            Commands.waitUntil(this::isHomingCurrentReached)
+                .withTimeout(kHomingTimeoutSeconds),
+            Commands.either(
+                runOnce(() -> {
+                    pivotMotor.setPosition(Position.HOMED.angle());
+                    isHomed = true;
+                    set(Position.STOWED);
+                }),
+                runOnce(() -> setPivotPercentOutput(0)),
+                this::isHomingCurrentReached
+            ) //postion is wait and apply in amplitude
         )
         .unless(() -> isHomed)
         .withInterruptBehavior(InterruptionBehavior.kCancelIncoming);
+    }
+
+    private boolean isHomingCurrentReached() {
+        return pivotMotor.getSupplyCurrent().getValue().in(Amps) > kHomingCurrentThresholdAmps;
     }
 
     @Override
