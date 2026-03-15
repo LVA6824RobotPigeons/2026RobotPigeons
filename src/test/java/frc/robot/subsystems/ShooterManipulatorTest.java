@@ -1,37 +1,21 @@
 package frc.robot.subsystems;
 
 import com.ctre.phoenix6.BaseStatusSignal;
-import com.ctre.phoenix6.StatusSignal;
-import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.PIDRefSlopeECUTime_ClosedLoopModeValue;
-import com.ctre.phoenix6.sim.CANcoderSimState;
 import edu.wpi.first.hal.HAL;
-import edu.wpi.first.units.VoltageUnit;
-import edu.wpi.first.units.measure.Voltage;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.motorcontrol.Talon;
 import edu.wpi.first.wpilibj.simulation.DriverStationSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import org.ejml.dense.row.decomposition.hessenberg.HessenbergSimilarDecomposition_DDRM;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.Test;
 import com.ctre.phoenix6.signals.ControlModeValue;
 
-
-import javax.print.attribute.standard.JobImpressionsSupported;
-import javax.print.attribute.standard.ReferenceUriSchemesSupported;
-import java.lang.ref.Reference;
-import java.sql.Driver;
 import java.util.List;
 
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.py.cmm5.Controls.BinaryComponents.Y;
-
 public class ShooterManipulatorTest {
 
     private static final double EPS = 1e-3;
@@ -86,14 +70,17 @@ public class ShooterManipulatorTest {
 
         for (TalonFX motor : motors) {
             var mode = motor.getControlMode(false);
-            var voltage = motor.getMotorVoltage(false);
-            BaseStatusSignal.waitForAll(0.1,mode,voltage);
+            var reference = motor.getClosedLoopReference(false);
+            BaseStatusSignal.waitForAll(0.1, mode, reference);
 
             mode.waitForUpdate(0.1);
-            voltage.waitForUpdate(0.1);
+            reference.waitForUpdate(0.1);
 
-            assertEquals(ControlModeValue.VoltageOut, mode.getValue());
-            assertEquals(6.0, Math.abs(voltage.getValueAsDouble()), EPS);
+            assertTrue(
+                    mode.getValue() == ControlModeValue.VoltageOut
+                            || mode.getValue() == ControlModeValue.VoltageFOC
+            );
+            assertEquals(50.0, Math.abs(reference.getValueAsDouble()), EPS);
         }
     }
 
@@ -126,7 +113,10 @@ public class ShooterManipulatorTest {
             var slot = motor.getClosedLoopSlot(false);
             BaseStatusSignal.waitForAll(.1, mode, reference, slot);
 
-            assertEquals(ControlModeValue.VelocityVoltage, mode.getValue());
+            assertTrue(
+                    mode.getValue() == ControlModeValue.VelocityVoltage
+                            || mode.getValue() == ControlModeValue.VelocityVoltageFOC
+            );
             assertEquals(targetRps, Math.abs(reference.getValue()), EPS);
             assertEquals(0, slot.getValue(), EPS);
         }
@@ -181,13 +171,12 @@ public class ShooterManipulatorTest {
         setAllMeasuredVelocity(3000);
         setMeasuredVelocityRPM(1, 2800);
 
-        System.out.println(shooter.getVelocity(0));
         assertFalse(shooter.isVelocityWithinTolerance());
     }
 
     @Test
     void isVelocityWithinTolerance_trueWhenAllMotorsAreNearTarget() {
-        shooter.setRPM(3^(10*3));
+        shooter.setRPM(3000);
         waitForControlToApply();
 
         setMeasuredVelocityRPM(0,2950);

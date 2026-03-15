@@ -35,8 +35,9 @@ public class Shooter extends SubsystemBase implements AutoCloseable {
 
     private final TalonFX leftMotor, middleMotor, rightMotor;
     public final List<TalonFX> motors;
-    private final VelocityVoltage velocityRequest = new VelocityVoltage(0).withSlot(0);
-    private final VoltageOut voltageRequest = new VoltageOut(0);
+    private final VelocityVoltage velocityRequest =
+            new VelocityVoltage(0).withSlot(0).withEnableFOC(false);
+    private final VoltageOut voltageRequest = new VoltageOut(0).withEnableFOC(false);
 
     private double dashboardTargetRPM = 0.0;
 
@@ -124,12 +125,17 @@ public class Shooter extends SubsystemBase implements AutoCloseable {
 
     public boolean isVelocityWithinTolerance() {
         return motors.stream().allMatch(motor -> {
+            final ControlModeValue controlMode = motor.getControlMode().getValue();
             final boolean isInVelocityMode =
-                    motor.getControlMode().getValue() == ControlModeValue.VelocityVoltage;
+                    controlMode == ControlModeValue.VelocityVoltage
+                            || controlMode == ControlModeValue.VelocityVoltageFOC;
             final AngularVelocity currentVelocity = motor.getVelocity().getValue();
             final AngularVelocity targetVelocity =
                     RotationsPerSecond.of(motor.getClosedLoopReference().getValueAsDouble());
-            return isInVelocityMode && currentVelocity.isNear(targetVelocity, kVelocityTolerance);
+            final double currentRpm = Math.abs(currentVelocity.in(RPM));
+            final double targetRpm = Math.abs(targetVelocity.in(RPM));
+            return isInVelocityMode
+                    && Math.abs(currentRpm - targetRpm) <= kVelocityTolerance.in(RPM);
         });
     }
     public AngularVelocity getVelocity(int index) {
