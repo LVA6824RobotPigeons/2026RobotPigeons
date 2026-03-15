@@ -28,8 +28,9 @@ public class LED8 {
 
     }
     public void process(int refreshRate) {
-
-        colorSequence.tick(refreshRate);
+        if (colorSequence != null) {
+            colorSequence.tick(refreshRate);
+        }
         RGBWColor current = resolveColorOrOff(manager.getCurrentColor());
         candle.setControl(
                 new SolidColor(kStartLED, kNumberOfLights-1+kStartLED).withColor(

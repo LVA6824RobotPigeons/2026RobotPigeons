@@ -7,6 +7,7 @@ package frc.robot;
 import static edu.wpi.first.units.Units.MetersPerSecond;
 
 import java.util.Optional;
+import java.util.function.BooleanSupplier;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -38,6 +39,8 @@ import org.py.cmm5.Controls;
  * subsystems, commands, and trigger mappings) should be declared here.
  */
 public class RobotContainer {
+    private static final double kTriggerThreshold = 0.5;
+
     private final Swerve swerve = new Swerve();
     private final Intake intake = new Intake();
     private final Floor floor = new Floor();
@@ -50,6 +53,54 @@ public class RobotContainer {
     public CommandXboxController driver = new CommandXboxController(Main.use_cm_controller_selection?Controls.controllers.get(0).jid:Ports.driver);
     public void refreshDriver() {
         if(Main.use_cm_controller_selection) driver = new CommandXboxController(Controls.controllers.get(0).jid);
+    }
+
+    private Trigger driverTrigger(BooleanSupplier isActive) {
+        return new Trigger(isActive);
+    }
+
+    private Trigger driverRightTrigger() {
+        return driverTrigger(() -> driver.getRightTriggerAxis() > kTriggerThreshold);
+    }
+
+    private Trigger driverLeftTrigger() {
+        return driverTrigger(() -> driver.getLeftTriggerAxis() > kTriggerThreshold);
+    }
+
+    private Trigger driverRightBumper() {
+        return driverTrigger(() -> driver.getHID().getRightBumperButton());
+    }
+
+    private Trigger driverLeftBumper() {
+        return driverTrigger(() -> driver.getHID().getLeftBumperButton());
+    }
+
+    private Trigger driverAButton() {
+        return driverTrigger(() -> driver.getHID().getAButton());
+    }
+
+    private Trigger driverBButton() {
+        return driverTrigger(() -> driver.getHID().getBButton());
+    }
+
+    private Trigger driverXButton() {
+        return driverTrigger(() -> driver.getHID().getXButton());
+    }
+
+    private Trigger driverYButton() {
+        return driverTrigger(() -> driver.getHID().getYButton());
+    }
+
+    private Trigger driverBackButton() {
+        return driverTrigger(() -> driver.getHID().getBackButton());
+    }
+
+    private Trigger driverPovUp() {
+        return driverTrigger(() -> driver.getHID().getPOV() == 0);
+    }
+
+    private Trigger driverPovDown() {
+        return driverTrigger(() -> driver.getHID().getPOV() == 180);
     }
 
     private final SwerveTelemetry swerveTelemetry = new SwerveTelemetry(Driving.kMaxSpeed.in(MetersPerSecond));
@@ -100,13 +151,13 @@ public class RobotContainer {
             .onTrue(intake.homingCommand())
             .onTrue(hanger.homingCommand());
 
-        driver.rightTrigger().whileTrue(subsystemCommands.aimAndShoot());
-        driver.rightBumper().whileTrue(subsystemCommands.shootManually());
-        driver.leftTrigger().whileTrue(intake.intakeCommand());
-        driver.leftBumper().onTrue(intake.runOnce(() -> intake.set(Intake.Position.STOWED)));
+        driverRightTrigger().whileTrue(subsystemCommands.aimAndShoot());
+        driverRightBumper().whileTrue(subsystemCommands.shootManually());
+        driverLeftTrigger().whileTrue(intake.intakeCommand());
+        driverLeftBumper().onTrue(intake.runOnce(() -> intake.set(Intake.Position.STOWED)));
 
-        driver.povUp().onTrue(hanger.positionCommand(Hanger.Position.HANGING));
-        driver.povDown().onTrue(hanger.positionCommand(Hanger.Position.HUNG));
+        driverPovUp().onTrue(hanger.positionCommand(Hanger.Position.HANGING));
+        driverPovDown().onTrue(hanger.positionCommand(Hanger.Position.HUNG));
     }
 
     private void configureManualDriveBindings() {
@@ -117,11 +168,11 @@ public class RobotContainer {
             () -> -driver.getRightX()
         );
         swerve.setDefaultCommand(manualDriveCommand);
-        driver.a().onTrue(Commands.runOnce(() -> manualDriveCommand.setLockedHeading(Rotation2d.k180deg)));
-        driver.b().onTrue(Commands.runOnce(() -> manualDriveCommand.setLockedHeading(Rotation2d.kCW_90deg)));
-        driver.x().onTrue(Commands.runOnce(() -> manualDriveCommand.setLockedHeading(Rotation2d.kCCW_90deg)));
-        driver.y().onTrue(Commands.runOnce(() -> manualDriveCommand.setLockedHeading(Rotation2d.kZero)));
-        driver.back().onTrue(Commands.runOnce(manualDriveCommand::seedFieldCentric));
+        driverAButton().onTrue(Commands.runOnce(() -> manualDriveCommand.setLockedHeading(Rotation2d.k180deg)));
+        driverBButton().onTrue(Commands.runOnce(() -> manualDriveCommand.setLockedHeading(Rotation2d.kCW_90deg)));
+        driverXButton().onTrue(Commands.runOnce(() -> manualDriveCommand.setLockedHeading(Rotation2d.kCCW_90deg)));
+        driverYButton().onTrue(Commands.runOnce(() -> manualDriveCommand.setLockedHeading(Rotation2d.kZero)));
+        driverBackButton().onTrue(Commands.runOnce(manualDriveCommand::seedFieldCentric));
     }
 
     private Command updateVisionCommand() {
