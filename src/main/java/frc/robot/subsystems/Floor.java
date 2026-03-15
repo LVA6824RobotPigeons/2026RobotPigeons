@@ -12,11 +12,13 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import com.ctre.phoenix6.signals.RGBWColor;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
 import frc.robot.Ports;
 
 public class Floor extends SubsystemBase {
@@ -67,7 +69,22 @@ public class Floor extends SubsystemBase {
     }
 
     public Command feedCommand() {
-        return startEnd(() -> set(Speed.FEED), () -> set(Speed.STOP));
+        return startEnd(
+                () -> {
+                    Ports.kCandle.setColor(
+                            new RGBWColor[] {
+                                    Constants.LEDs.kGreen,
+                                    Constants.LEDs.kWhite
+                            },
+                            100,
+                            10
+                    );
+                    set(Speed.FEED);
+                },
+                () -> {
+                    Ports.kCandle.removeColor(10);
+                    set(Speed.STOP);
+                });
     }
 
     @Override

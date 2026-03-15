@@ -22,10 +22,12 @@ public class LED8 {
     }
 
     public ColorSequence colorSequence;
-    public void setColorSequence(RGBWColor[] sequence,long speed,int zIndex) {
+    public void setColor(RGBWColor[] sequence, long speed, int zIndex) {
         if(this.colorSequence != null) this.colorSequence.stop();
         this.colorSequence = new ColorSequence(this,sequence,speed,zIndex);
-
+    }
+    public void removeColor(int zIndex) {
+        if(manager.getCurrentZ() == zIndex) manager.remove(manager.getCurrentColor(),manager.getCurrentZ());
     }
     public void process(int refreshRate) {
         if (colorSequence != null) {

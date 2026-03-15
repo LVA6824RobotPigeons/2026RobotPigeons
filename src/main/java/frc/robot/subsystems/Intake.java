@@ -20,6 +20,7 @@ import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import com.ctre.phoenix6.signals.RGBWColor;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
@@ -29,6 +30,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
 import frc.robot.Constants.KrakenX60;
 import frc.robot.Ports;
 
@@ -168,10 +170,21 @@ public class Intake extends SubsystemBase { //makes it public
     public Command intakeCommand() {
         return startEnd(
             () -> {
+                Ports.kCandle.setColor(
+                        new RGBWColor[] {
+                                Constants.LEDs.kGreen,
+                                Constants.LEDs.kMichenta
+                        },
+                        100,
+                        30
+                );
                 set(Position.INTAKE);
                 set(Speed.INTAKE);
             },
-            () -> set(Speed.STOP)
+            () -> {
+                Ports.kCandle.removeColor(30);
+                set(Speed.STOP);
+            }
         );
     }
 

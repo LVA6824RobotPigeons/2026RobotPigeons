@@ -20,7 +20,6 @@ public class LEDManager {
     public void remove(RGBWColor color, int zIndex) {
         layers.remove(zIndex, color);
     }
-
     public RGBWColor getCurrentColor() {
         return layers.isEmpty() ? null : layers.lastEntry().getValue();
     }

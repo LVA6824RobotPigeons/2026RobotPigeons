@@ -163,7 +163,7 @@ public class Main {
             }
 
             Controls.setControllers(controllers);
-            frc.robot.Main.robot.m_robotContainer.refreshDriver();
+//            frc.robot.Main.robot.m_robotContainer.refreshDriver();
 
         }
     }
