@@ -20,6 +20,18 @@ public class LED8 {
         manager.set(color,zIndex);
         return this;
     }
+    public LED8 forceSet(RGBWColor color) {
+        candle.setControl(
+                new SolidColor(kStartLED, kNumberOfLights-1+kStartLED).withColor(
+                        new RGBWColor(
+                                color.Red,
+                                color.Green,
+                                color.Blue
+                        )
+                )
+        );
+        return this;
+    }
 
     public ColorSequence colorSequence;
     public void setColor(RGBWColor[] sequence, long speed, int zIndex) {
