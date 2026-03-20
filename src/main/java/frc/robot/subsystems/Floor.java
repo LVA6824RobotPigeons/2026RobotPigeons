@@ -20,6 +20,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.Ports;
+import frc.robot.subsystems.led8.LED8Implimentation;
 
 public class Floor extends SubsystemBase {
     public enum Speed {
@@ -71,10 +72,11 @@ public class Floor extends SubsystemBase {
     public Command feedCommand() {
         return startEnd(
                 () -> {
+                    LED8Implimentation.intakeOn();
                     set(Speed.FEED);
                 },
                 () -> {
-                    Ports.kCandle.removeColor(10);
+                    LED8Implimentation.intakeOff();
                     set(Speed.STOP);
                 });
     }

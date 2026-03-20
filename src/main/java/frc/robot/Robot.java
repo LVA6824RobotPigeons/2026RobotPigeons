@@ -6,9 +6,11 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.Volts;
 
+import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.RGBWColor;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
@@ -51,6 +53,7 @@ public class Robot extends TimedRobot {
         // block in order for anything in the Command-based framework to work.
         CommandScheduler.getInstance().run();
         if(Main.use_cm_controller_selection) org.py.cmm5.Main.process();
-        Ports.kCandle.process(20);
+//        Ports.kCandle.process(20);
+        if(new XboxController(0).getAButton()) Ports.kCandle.overrideColor(Constants.LEDs.kMichenta); else Ports.kCandle.overrideColor(Constants.LEDs.kYellow);
     }
 }

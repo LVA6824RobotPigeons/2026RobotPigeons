@@ -24,6 +24,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.Constants.KrakenX60;
 import frc.robot.Ports;
+import frc.robot.subsystems.led8.LED8Implimentation;
 
 public class Feeder extends SubsystemBase {
     public enum Speed {
@@ -68,7 +69,7 @@ public class Feeder extends SubsystemBase {
                     .withKD(0)
                     .withKV(12.0 / KrakenX60.kFreeSpeed.in(RotationsPerSecond)) // 12 volts when requesting max RPS
             );
-        
+
         motor.getConfigurator().apply(config);
         SmartDashboard.putData(this);
     }
@@ -90,8 +91,10 @@ public class Feeder extends SubsystemBase {
     public Command feedCommand() {
         return startEnd(
                 () -> {
+                    LED8Implimentation.feedOn();
                     set(Speed.FEED);
                 }, () -> {
+                    LED8Implimentation.feedOff();
                     set(Speed.STOP);
                 }
                 );

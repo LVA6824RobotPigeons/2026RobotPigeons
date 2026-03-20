@@ -4,6 +4,7 @@
 
 package frc.robot;
 
+import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.wpilibj.RobotBase;
 
 public final class Main {
@@ -13,6 +14,6 @@ public final class Main {
   private Main() {}
 
   public static void main(String... args) {
-    RobotBase.startRobot(Robot::new);
+        RobotBase.startRobot(Robot::new);
   }
 }
