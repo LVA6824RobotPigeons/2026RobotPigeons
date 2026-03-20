@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
 import com.ctre.phoenix6.signals.RGBWColor;
+import frc.robot.subsystems.led8.LED8;
 import org.junit.jupiter.api.Test;
 
 class LED8Test {

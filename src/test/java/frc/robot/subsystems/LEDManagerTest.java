@@ -58,7 +58,7 @@ class LEDManagerTest {
         RGBWColor wrong = new RGBWColor(1, 1, 1);
 
         manager.set(kept, 3);
-        manager.remove(wrong, 3);
+        manager.remove(3);
 
         assertEquals(3, manager.getCurrentZ());
         assertSameColor(kept, manager.getCurrentColor());
