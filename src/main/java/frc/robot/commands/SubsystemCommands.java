@@ -74,34 +74,16 @@ public final class SubsystemCommands {
 
     public Command aimAndShoot() {
 
-        final Command ledOnCommand = Commands.runOnce(
-            () -> Ports.kCandle.setColor(
-                new RGBWColor[] {
-                        Constants.LEDs.kYellow,
-                        Constants.LEDs.kCyan,
-                        Constants.LEDs.kMichenta
-                },
-                100,
-                4
-            )
-        );
-        final Command ledOffCommand = Commands.runOnce(
-                () -> Ports.kCandle.removeColor(4)
-        );
-
         final AimAndDriveCommand aimAndDriveCommand = new AimAndDriveCommand(swerve, yInput, xInput);
         final PrepareShotCommand prepareShotCommand = new PrepareShotCommand(shooter, hood, () -> swerve.getState().Pose);
         // Aims and then drives, then prepares shot after 0.25 seconds, then waits until aimed and ready to shoot, then "feeds" for some reason
         // (All at the same time)
-        return ledOnCommand.andThen(
-            Commands.parallel(
-                aimAndDriveCommand,
-                Commands.waitSeconds(0.25)
-                    .andThen(prepareShotCommand),
-                Commands.waitUntil(() -> aimAndDriveCommand.isAimed() && prepareShotCommand.isReadyToShoot())
-                    .andThen(feed())
-                        .andThen(ledOffCommand)
-            )
+        return Commands.parallel(
+            aimAndDriveCommand,
+            Commands.waitSeconds(0.25)
+                .andThen(prepareShotCommand),
+            Commands.waitUntil(() -> aimAndDriveCommand.isAimed() && prepareShotCommand.isReadyToShoot())
+                .andThen(feed())
         );
     }
 

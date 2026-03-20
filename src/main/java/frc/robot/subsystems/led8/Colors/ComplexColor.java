@@ -21,12 +21,12 @@ public class ComplexColor {
         colorAnimation.complexColor = this;
         this.colorAnimation = colorAnimation;
     }
-    public ComplexColor(frc.robot.led.led8.Colors.ColorSolid colorSolid) {
+    public ComplexColor(ColorSolid colorSolid) {
         type = ColorTypes.Solid;
         colorSolid.complexColor = this;
         this.colorSolid = colorSolid;
     }
-    public ComplexColor(frc.robot.led.led8.Colors.ColorSequence colorSequence) {
+    public ComplexColor(ColorSequence colorSequence) {
         type = ColorTypes.Sequence;
         colorSequence.complexColor = this;
         this.colorSequence = colorSequence;

@@ -1,7 +1,6 @@
 package frc.robot.subsystems.led8.Colors;
 
 import com.ctre.phoenix6.signals.RGBWColor;
-import frc.robot.led.led8.ComplexColor;
 
 public class ColorSolid {
 
