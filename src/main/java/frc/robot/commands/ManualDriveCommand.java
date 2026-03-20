@@ -106,14 +106,7 @@ public class ManualDriveCommand extends Command {
         headingLockStopwatch.reset();
         previousInput = new ManualDriveInput();
 
-        Ports.kCandle.setColor(
-            new RGBWColor[] {
-                Constants.LEDs.kBlue,
-                Constants.LEDs.kRed
-            },
-            400,
-            1
-        );
+
     }
     @Override
     public void end(boolean interrupted) {

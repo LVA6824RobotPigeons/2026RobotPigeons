@@ -71,14 +71,6 @@ public class Floor extends SubsystemBase {
     public Command feedCommand() {
         return startEnd(
                 () -> {
-                    Ports.kCandle.setColor(
-                            new RGBWColor[] {
-                                    Constants.LEDs.kGreen,
-                                    Constants.LEDs.kWhite
-                            },
-                            100,
-                            10
-                    );
                     set(Speed.FEED);
                 },
                 () -> {

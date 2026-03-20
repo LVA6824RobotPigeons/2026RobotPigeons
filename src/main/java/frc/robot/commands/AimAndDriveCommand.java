@@ -72,10 +72,7 @@ public class AimAndDriveCommand extends Command {
     @Override
     public void initialize() {
         // Sets color sequence once when the command starts
-        Ports.kCandle.setColor(
-                Constants.LEDs.kYellow,
-                2
-        );
+
     }
 
     @Override

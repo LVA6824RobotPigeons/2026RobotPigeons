@@ -90,10 +90,6 @@ public class Feeder extends SubsystemBase {
     public Command feedCommand() {
         return startEnd(
                 () -> {
-                    Ports.kCandle.setColor(
-                            Constants.LEDs.kGreen,
-                            20
-                    );
                     set(Speed.FEED);
                 }, () -> {
                     set(Speed.STOP);
