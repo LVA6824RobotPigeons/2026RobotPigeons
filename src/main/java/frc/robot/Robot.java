@@ -11,9 +11,6 @@ import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
-import frc.robot.subsystems.ColorSequence;
-import frc.robot.subsystems.LED8;
-import frc.robot.subsystems.LEDManager;
 
 /**
  * The methods in this class are called automatically corresponding to each mode, as described in
@@ -36,18 +33,7 @@ public class Robot extends TimedRobot {
         SmartDashboard.putData(CommandScheduler.getInstance());
         RobotController.setBrownoutVoltage(Volts.of(6.1));
         if(Main.use_cm_controller_selection) org.py.cmm5.Main.init();
-        Ports.kCandle.setColor(
-                new RGBWColor[] {
-                        Constants.LEDs.kRed,
-                        Constants.LEDs.kYellow,
-                        Constants.LEDs.kGreen,
-                        Constants.LEDs.kCyan,
-                        Constants.LEDs.kBlue,
-                        Constants.LEDs.kMichenta
-                },
-                300,
-                -1
-        );
+
     }
     
     /**

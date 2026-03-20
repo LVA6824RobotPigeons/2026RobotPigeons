@@ -170,14 +170,6 @@ public class Intake extends SubsystemBase { //makes it public
     public Command intakeCommand() {
         return startEnd(
             () -> {
-                Ports.kCandle.setColor(
-                        new RGBWColor[] {
-                                Constants.LEDs.kGreen,
-                                Constants.LEDs.kMichenta
-                        },
-                        100,
-                        30
-                );
                 set(Position.INTAKE);
                 set(Speed.INTAKE);
             },

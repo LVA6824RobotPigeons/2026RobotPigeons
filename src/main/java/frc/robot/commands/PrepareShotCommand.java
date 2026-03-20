@@ -68,15 +68,7 @@ public class PrepareShotCommand extends Command {
     @Override
     public void initialize() {
 
-        Ports.kCandle.setColor(
-                new RGBWColor[] {
-                        Constants.LEDs.kYellow,
-                        Constants.LEDs.kCyan,
-                        Constants.LEDs.kMichenta
-                },
-                100,
-                10
-        );
+        
 
     }
 
