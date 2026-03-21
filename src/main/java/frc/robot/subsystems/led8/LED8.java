@@ -10,10 +10,12 @@ public class LED8 {
     public CANdle candle;
     public LEDManager manager;
 
+    public int startIndex;
     public int amountOfLeds;
 
-    public LED8(CANdle candle, int amountOfLeds) {
+    public LED8(CANdle candle, int startIndex, int amountOfLeds) {
         this.candle = candle;
+        this.startIndex = startIndex;
         this.amountOfLeds = amountOfLeds;
         manager = new LEDManager();
     }
@@ -30,14 +32,14 @@ public class LED8 {
         System.out.println("Refreshed");
         candle.clearAllAnimations();
         if(manager.getCurrentColor() != null) manager.getCurrentColor().tick(1000,this);
-        else candle.setControl(new SolidColor(0,amountOfLeds-1).withColor(new RGBWColor(0,0,0)));
+        else candle.setControl(new SolidColor(startIndex,startIndex+amountOfLeds-1).withColor(new RGBWColor(0,0,0)));
     }
 
     public void process(int refreshRate) {
 
         ComplexColor color = manager.getCurrentColor();
         if(color != null) color.tick(refreshRate,this);
-        else candle.setControl(new SolidColor(0,amountOfLeds-1).withColor(new RGBWColor(0,0,0)));
+        else candle.setControl(new SolidColor(startIndex,startIndex+amountOfLeds-1).withColor(new RGBWColor(0,0,0)));
 
     }
 

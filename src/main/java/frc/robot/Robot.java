@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.subsystems.LED8Implimentation;
 
 /**
  * The methods in this class are called automatically corresponding to each mode, as described in
@@ -31,6 +32,7 @@ public class Robot extends TimedRobot {
         // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
         // autonomous chooser on the dashboard.
         //Main.robot = this;
+        LED8Implimentation.robotStart();
         m_robotContainer = new RobotContainer();
         SmartDashboard.putData(CommandScheduler.getInstance());
         RobotController.setBrownoutVoltage(Volts.of(6.1));
@@ -53,4 +55,23 @@ public class Robot extends TimedRobot {
         CommandScheduler.getInstance().run();
         Ports.kCandle.process(20);
     }
+
+    @Override
+    public void teleopInit() {
+        LED8Implimentation.teleopMode();
+    }
+    @Override
+    public void teleopExit() {
+        LED8Implimentation.teleopMode();
+    }
+
+    @Override
+    public void autonomousInit() {
+        LED8Implimentation.autoMode();
+    }
+    @Override
+    public void autonomousExit() {
+        LED8Implimentation.autoOff();
+    }
+
 }

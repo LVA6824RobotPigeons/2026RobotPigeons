@@ -20,7 +20,7 @@ public class ColorSequence {
     public void setColor(RGBWColor color, LED8 led8) {
         led8.candle.setControl(
                 new SolidColor(
-                    0, led8.amountOfLeds-1
+                        led8.startIndex, led8.startIndex+led8.amountOfLeds-1
                 )
                 .withColor(color)
         );
