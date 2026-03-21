@@ -174,7 +174,6 @@ public class Intake extends SubsystemBase { //makes it public
             },
             () -> {
                 LED8Implimentation.intakeOff();
-                Ports.kCandle.removeColor(30);
                 set(Speed.STOP);
             }
         );

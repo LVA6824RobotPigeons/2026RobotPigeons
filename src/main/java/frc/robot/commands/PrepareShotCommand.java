@@ -89,7 +89,6 @@ public class PrepareShotCommand extends Command {
 
     @Override
     public void end(boolean interrupted) {
-        Ports.kCandle.removeColor(10);
         shooter.stop(); // in the name of law!
     }
 

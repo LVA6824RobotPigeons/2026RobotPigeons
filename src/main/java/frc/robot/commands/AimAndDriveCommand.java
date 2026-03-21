@@ -77,7 +77,7 @@ public class AimAndDriveCommand extends Command {
 
     @Override
     public void end(boolean interrupted) {
-        Ports.kCandle.removeColor(2);
+
     }
 
     @Override

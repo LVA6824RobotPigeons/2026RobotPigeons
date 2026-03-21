@@ -9,13 +9,13 @@ public final class Ports {
 
     // CAN Buses
     public static final CANBus kRoboRioCANBus = new CANBus("rio");
-    public static final CANBus kCANivoreCANBus = new CANBus("main");
+    public static final CANBus kCANivoreCANBus = new CANBus("Systems");
 
     // CANdle
-    public static final CANdle kCANdle = new CANdle(0,kRoboRioCANBus);
-    public static final LED8 kCandle = new LED8(kCANdle,0,7);
-    public static final LED8 kStrip = new LED8(kCANdle,8,167);
-    public static final LED8Group kLights = new LED8Group().add(kCandle).add(kStrip);
+//    public static final CANdle kCANdle = new CANdle(0,kRoboRioCANBus);
+//    public static final LED8 kCandle = new LED8(kCANdle,0,7);
+//    public static final LED8 kStrip = new LED8(kCANdle,8,167);
+//    public static final LED8Group kLights = new LED8Group().add(kCandle).add(kStrip);
 
     // Talon FX IDs
     public static final int kIntakePivot = 10;
