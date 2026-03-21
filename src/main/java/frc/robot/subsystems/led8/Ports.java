@@ -11,7 +11,7 @@ public final class Ports {
 
     // CANdle
     public static final CANdle kCANdle = new CANdle(0);
-    public static final LED8 kCandle = new LED8(kCANdle);
+    public static final LED8 kCandle = new LED8(kCANdle,Constants.LEDs.kNumberOfLights);
 
 //    // Talon FX IDs
 //    public static final int kIntakePivot = 10;

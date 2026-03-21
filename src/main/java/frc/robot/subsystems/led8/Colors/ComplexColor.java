@@ -1,6 +1,6 @@
 package frc.robot.subsystems.led8.Colors;
 
-import com.ctre.phoenix6.signals.RGBWColor;
+import frc.robot.subsystems.led8.LED8;
 
 public class ComplexColor {
 
@@ -10,7 +10,6 @@ public class ComplexColor {
         Sequence,
     }
 
-    public RGBWColor currentColor;
     public ColorTypes type;
     private ColorSequence colorSequence;
     private ColorSolid colorSolid;
@@ -32,15 +31,15 @@ public class ComplexColor {
         this.colorSequence = colorSequence;
     }
 
-    public void tick(int refreshRate) {
+    public void tick(int refreshRate, LED8 led8) {
 
         switch(type) {
             case Solid:
-                colorSolid.tick(refreshRate); break;
+                colorSolid.tick(refreshRate,led8); break;
             case Animation:
-                colorAnimation.tick(refreshRate); break;
+                colorAnimation.tick(refreshRate,led8); break;
             case Sequence:
-                colorSequence.tick(refreshRate); break;
+                colorSequence.tick(refreshRate,led8); break;
         }
 
     }

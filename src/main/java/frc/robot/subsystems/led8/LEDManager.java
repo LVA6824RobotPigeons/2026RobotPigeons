@@ -13,8 +13,13 @@ public class LEDManager {
         layers.put(zIndex, guy);
     }
 
-    public void remove(int zIndex) {
-        layers.remove(zIndex);
+    public boolean has(ComplexColor guy, int zIndex) {
+        if(layers.get(zIndex) == null) return false;
+        else return layers.get(zIndex) == guy;
+    }
+
+    public ComplexColor remove(int zIndex) { // Returns old value
+        return layers.remove(zIndex);
     }
 
     public ComplexColor getCurrentColor() {

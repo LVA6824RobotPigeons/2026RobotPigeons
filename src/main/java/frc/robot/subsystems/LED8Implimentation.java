@@ -1,15 +1,16 @@
-package frc.robot.subsystems.led8;
+package frc.robot.subsystems;
 
 import com.ctre.phoenix6.signals.RGBWColor;
 import frc.robot.Constants;
 import frc.robot.subsystems.led8.Colors.ColorSequence;
 import frc.robot.subsystems.led8.Colors.ColorSolid;
 import frc.robot.subsystems.led8.Colors.ComplexColor;
+import frc.robot.subsystems.led8.Ports;
 
 public class LED8Implimentation {
 
     public static void intakeOn() {
-        Ports.kCandle.setColor(new ComplexColor(
+        Ports.kCandle.addColor(new ComplexColor(
                 new ColorSequence(new RGBWColor[] {
                         Constants.LEDs.kGreen,
                         Constants.LEDs.kWhite
@@ -22,7 +23,7 @@ public class LED8Implimentation {
     }
 
     public static void feedOn() {
-        Ports.kCandle.setColor(new ComplexColor(
+        Ports.kCandle.addColor(new ComplexColor(
                 new ColorSequence(new RGBWColor[] {
                         Constants.LEDs.kBlue,
                         Constants.LEDs.kMichenta,
