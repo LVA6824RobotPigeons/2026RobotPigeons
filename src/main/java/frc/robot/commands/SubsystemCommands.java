@@ -98,7 +98,7 @@ public final class SubsystemCommands {
         return Commands.sequence(
             Commands.waitSeconds(0.25), // Waits
             Commands.parallel( // All at once
-//                feeder.feedCommand(), // Starts feeding
+                feeder.feedCommand(), // Starts feeding
                 Commands.waitSeconds(0.125) // Waits a lil
                     .andThen(floor.feedCommand().alongWith(intake.agitateCommand())) // Spits out
             )
