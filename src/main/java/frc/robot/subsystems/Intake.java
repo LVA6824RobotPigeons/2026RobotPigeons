@@ -25,6 +25,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.util.sendable.SendableBuilder;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
@@ -33,6 +34,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.Constants.KrakenX60;
 import frc.robot.Ports;
+import frc.robot.subsystems.led8.LED8Implimentation;
 
 public class Intake extends SubsystemBase { //makes it public
     public enum Speed { //speedy
@@ -170,10 +172,12 @@ public class Intake extends SubsystemBase { //makes it public
     public Command intakeCommand() {
         return startEnd(
             () -> {
+                LED8Implimentation.intakeOn();
                 set(Position.INTAKE);
                 set(Speed.INTAKE);
             },
             () -> {
+                LED8Implimentation.intakeOff();
                 Ports.kCandle.removeColor(30);
                 set(Speed.STOP);
             }
