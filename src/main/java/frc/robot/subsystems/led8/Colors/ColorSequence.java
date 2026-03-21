@@ -1,6 +1,8 @@
 package frc.robot.subsystems.led8.Colors;
 
+import com.ctre.phoenix6.controls.SolidColor;
 import com.ctre.phoenix6.signals.RGBWColor;
+import frc.robot.subsystems.led8.LED8;
 
 public class ColorSequence {
 
@@ -15,13 +17,18 @@ public class ColorSequence {
         this.colors = colors;
     }
 
-    public void setColor(RGBWColor color) {
-        if(complexColor != null) complexColor.currentColor = color;
+    public void setColor(RGBWColor color, LED8 led8) {
+        led8.candle.setControl(
+                new SolidColor(
+                    0, led8.amountOfLeds-1
+                )
+                .withColor(color)
+        );
     }
 
-    public void tick(int refreshRate) {
+    public void tick(int refreshRate, LED8 led8) {
 
-        setColor(colors[index]);
+        setColor(colors[index],led8);
         if(System.currentTimeMillis()%Math.max(refreshRate,frequency)<=refreshRate) index++;
         if(index == colors.length) index = 0;
 

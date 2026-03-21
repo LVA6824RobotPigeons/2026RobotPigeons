@@ -12,7 +12,7 @@ public final class Ports {
 
     // CANdle
     public static final CANdle kCANdle = new CANdle(0,kRoboRioCANBus);
-    public static final LED8 kCandle = new LED8(kCANdle);
+    public static final LED8 kCandle = new LED8(kCANdle,Constants.LEDs.kNumberOfLights-1);
 
     // Talon FX IDs
     public static final int kIntakePivot = -1;//10;

@@ -5,46 +5,42 @@ import com.ctre.phoenix6.hardware.CANdle;
 import com.ctre.phoenix6.signals.RGBWColor;
 import frc.robot.subsystems.led8.Colors.ComplexColor;
 
-import static frc.robot.Constants.LEDs.kNumberOfLights;
-import static frc.robot.Constants.LEDs.kStartLED;
-
 public class LED8 {
 
     public CANdle candle;
     public LEDManager manager;
 
-    public LED8(CANdle candle) {
+    public int amountOfLeds;
+
+    public LED8(CANdle candle, int amountOfLeds) {
         this.candle = candle;
+        this.amountOfLeds = amountOfLeds;
         manager = new LEDManager();
     }
 
-    public LED8 setColor(ComplexColor complexColor, int zIndex) {
-        manager.add(complexColor,zIndex);
-        return this;
+    public void addColor(ComplexColor complexColor, int zIndex) {
+        if(!manager.has(complexColor,zIndex)) manager.add(complexColor,zIndex);
+        if(manager.getCurrentColor() == complexColor) refresh();
     }
     public void removeColor(int zIndex) {
-        manager.remove(zIndex);
+        ComplexColor previousTop = manager.getCurrentColor();
+        if(manager.remove(zIndex) != null && previousTop != manager.getCurrentColor()) refresh();
+    }
+    public void refresh() {
+        System.out.println("Refreshed");
+        candle.clearAllAnimations();
+        if(manager.getCurrentColor() != null) manager.getCurrentColor().tick(1000,this);
+        else candle.setControl(new SolidColor(0,amountOfLeds-1).withColor(new RGBWColor(0,0,0)));
     }
 
     public void process(int refreshRate) {
 
         ComplexColor color = manager.getCurrentColor();
-        if(color != null) color.tick(refreshRate);
-        overrideColor(color == null ? new RGBWColor(0,0,0) : color.currentColor);
+        if(color != null) color.tick(refreshRate,this);
+        else candle.setControl(new SolidColor(0,amountOfLeds-1).withColor(new RGBWColor(0,0,0)));
 
     }
 
-    public void overrideColor(RGBWColor color) {
-        candle.setControl(
-                new SolidColor(kStartLED, kNumberOfLights-1+kStartLED).withColor(
-                        new RGBWColor(
-                                color.Red,
-                                color.Green,
-                                color.Blue
-                        )
-                )
-        );
-    }
 
 
 

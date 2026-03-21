@@ -34,7 +34,6 @@ public class Robot extends TimedRobot {
         m_robotContainer = new RobotContainer();
         SmartDashboard.putData(CommandScheduler.getInstance());
         RobotController.setBrownoutVoltage(Volts.of(6.1));
-        if(Main.use_cm_controller_selection) org.py.cmm5.Main.init();
 
     }
     
@@ -52,8 +51,6 @@ public class Robot extends TimedRobot {
         // and running subsystem periodic() methods.  This must be called from the robot's periodic
         // block in order for anything in the Command-based framework to work.
         CommandScheduler.getInstance().run();
-        if(Main.use_cm_controller_selection) org.py.cmm5.Main.process();
-//        Ports.kCandle.process(20);
-        if(new XboxController(0).getAButton()) Ports.kCandle.overrideColor(Constants.LEDs.kMichenta); else Ports.kCandle.overrideColor(Constants.LEDs.kYellow);
+        Ports.kCandle.process(20);
     }
 }
