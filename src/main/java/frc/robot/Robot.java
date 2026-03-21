@@ -22,6 +22,7 @@ import frc.robot.subsystems.LED8Implimentation;
  */
 public class Robot extends TimedRobot {
     public final RobotContainer m_robotContainer;
+    private final XboxController temp = new XboxController(0);
     
     /**
      * This function is run when the robot is first started up and should be used for any
@@ -48,12 +49,12 @@ public class Robot extends TimedRobot {
      */
     @Override
     public void robotPeriodic() {
+        if(temp.getAButton()) System.out.println(1);
         // Runs the Scheduler.  This is responsible for polling buttons, adding newly-scheduled
         // commands, running already-scheduled commands, removing finished or interrupted commands,
         // and running subsystem periodic() methods.  This must be called from the robot's periodic
         // block in order for anything in the Command-based framework to work.
         CommandScheduler.getInstance().run();
-        Ports.kCandle.process(20);
     }
 
     @Override

@@ -110,7 +110,7 @@ public class ManualDriveCommand extends Command {
     }
     @Override
     public void end(boolean interrupted) {
-        Ports.kCandle.removeColor(1);
+
     }
 
     @Override
