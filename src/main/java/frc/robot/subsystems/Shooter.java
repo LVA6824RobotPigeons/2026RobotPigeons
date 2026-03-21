@@ -12,7 +12,6 @@ import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.VoltageConfigs;
-import com.ctre.phoenix6.controls.ControlRequest;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -42,9 +41,9 @@ public class Shooter extends SubsystemBase implements AutoCloseable {
     private double dashboardTargetRPM = 0.0;
 
     public Shooter() {
-        leftMotor = new TalonFX(Ports.kShooterLeft, Ports.kRoboRioCANBus);
-        middleMotor = new TalonFX(Ports.kShooterMiddle, Ports.kRoboRioCANBus);
-        rightMotor = new TalonFX(Ports.kShooterRight, Ports.kRoboRioCANBus);
+        leftMotor = new TalonFX(Ports.kShooterLeft, Ports.kCANivoreCANBus);
+        middleMotor = new TalonFX(Ports.kShooterMiddle, Ports.kCANivoreCANBus);
+        rightMotor = new TalonFX(Ports.kShooterRight, Ports.kCANivoreCANBus);
         motors = List.of(leftMotor, middleMotor, rightMotor);
 
         configureMotor(leftMotor, InvertedValue.CounterClockwise_Positive);

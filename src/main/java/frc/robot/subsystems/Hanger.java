@@ -65,7 +65,7 @@ public class Hanger extends SubsystemBase {
     private boolean isHomed = false;
 
     public Hanger() {
-        motor = new TalonFX(Ports.kHanger, Ports.kRoboRioCANBus);
+        motor = new TalonFX(Ports.kHanger, Ports.kCANivoreCANBus);
 
         final TalonFXConfiguration config = new TalonFXConfiguration()
             .withMotorOutput(
