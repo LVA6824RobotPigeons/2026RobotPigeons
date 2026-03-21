@@ -1,14 +1,10 @@
 package frc.robot;
 
 import com.ctre.phoenix6.CANBus;
-import com.ctre.phoenix6.hardware.CANdle;
-import frc.robot.subsystems.led8.LED8;
-import frc.robot.subsystems.led8.LED8Group;
 
 public final class Ports {
 
     // CAN Buses
-    public static final CANBus kRoboRioCANBus = new CANBus("rio");
     public static final CANBus kCANivoreCANBus = new CANBus("Systems");
 
     // CANdle
