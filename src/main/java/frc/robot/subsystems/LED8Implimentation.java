@@ -1,16 +1,34 @@
 package frc.robot.subsystems;
 
+import com.ctre.phoenix6.controls.LarsonAnimation;
 import com.ctre.phoenix6.signals.RGBWColor;
 import frc.robot.Constants;
+import frc.robot.Ports;
+import frc.robot.subsystems.led8.Colors.ColorAnimation;
 import frc.robot.subsystems.led8.Colors.ColorSequence;
 import frc.robot.subsystems.led8.Colors.ColorSolid;
 import frc.robot.subsystems.led8.Colors.ComplexColor;
-import frc.robot.subsystems.led8.Ports;
 
 public class LED8Implimentation {
 
+    public static void robotStart() {
+        frc.robot.Ports.kStrip.addColor(new ComplexColor(new ColorSolid(new RGBWColor(50,50,50))),-1);
+    }
+    public static void teleopMode() {
+        frc.robot.Ports.kStrip.addColor(new ComplexColor(new ColorAnimation(new LarsonAnimation(0,0).withColor(new RGBWColor(0,0,50)).withFrameRate(400))),1);
+    }
+    public static void teleopOff() {
+        frc.robot.Ports.kStrip.removeColor(1);
+    }
+    public static void autoMode() {
+        frc.robot.Ports.kStrip.addColor(new ComplexColor(new ColorAnimation(new LarsonAnimation(0,0).withColor(new RGBWColor(0,0,50)).withFrameRate(400))),0);
+    }
+    public static void autoOff() {
+        frc.robot.Ports.kStrip.removeColor(0);
+    }
+
     public static void intakeOn() {
-        Ports.kCandle.addColor(new ComplexColor(
+        Ports.kLights.addColor(new ComplexColor(
                 new ColorSequence(new RGBWColor[] {
                         Constants.LEDs.kGreen,
                         Constants.LEDs.kWhite
@@ -19,11 +37,11 @@ public class LED8Implimentation {
         );
     }
     public static void intakeOff() {
-        Ports.kCandle.removeColor(10);
+        Ports.kLights.removeColor(10);
     }
 
     public static void feedOn() {
-        Ports.kCandle.addColor(new ComplexColor(
+        Ports.kLights.addColor(new ComplexColor(
                 new ColorSequence(new RGBWColor[] {
                         Constants.LEDs.kBlue,
                         Constants.LEDs.kMichenta,
@@ -32,6 +50,6 @@ public class LED8Implimentation {
         );
     }
     public static void feedOff() {
-        Ports.kCandle.removeColor(15);
+        Ports.kLights.removeColor(15);
     }
 }

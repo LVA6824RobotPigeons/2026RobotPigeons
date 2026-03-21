@@ -72,64 +72,64 @@ public class ColorAnimation {
     public void setAnimation(FireAnimation fireAnimation, LED8 led8) {
         led8.candle.setControl(
                 fireAnimation
-                        .withLEDStartIndex(0)
-                        .withLEDEndIndex(led8.amountOfLeds-1)
+                        .withLEDStartIndex(led8.startIndex)
+                        .withLEDEndIndex(led8.startIndex+led8.amountOfLeds-1)
         );
     }
     public void setAnimation(LarsonAnimation larsonAnimation, LED8 led8) {
         led8.candle.setControl(
                 larsonAnimation
-                        .withLEDStartIndex(0)
-                        .withLEDEndIndex(led8.amountOfLeds-1)
+                        .withLEDStartIndex(led8.startIndex)
+                        .withLEDEndIndex(led8.startIndex+led8.amountOfLeds-1)
         );
     }
     public void setAnimation(ColorFlowAnimation colorFlowAnimation, LED8 led8) {
         led8.candle.setControl(
                 colorFlowAnimation
-                        .withLEDStartIndex(0)
-                        .withLEDEndIndex(led8.amountOfLeds-1)
+                        .withLEDStartIndex(led8.startIndex)
+                        .withLEDEndIndex(led8.startIndex+led8.amountOfLeds-1)
         );
     }
     public void setAnimation(RainbowAnimation rainbowAnimation, LED8 led8) {
         led8.candle.setControl(
                 rainbowAnimation
-                        .withLEDStartIndex(0)
-                        .withLEDEndIndex(led8.amountOfLeds-1)
+                        .withLEDStartIndex(led8.startIndex)
+                        .withLEDEndIndex(led8.startIndex+led8.amountOfLeds-1)
         );
     }
     public void setAnimation(RgbFadeAnimation rgbFadeAnimation, LED8 led8) {
         led8.candle.setControl(
                 rgbFadeAnimation
-                        .withLEDStartIndex(0)
-                        .withLEDEndIndex(led8.amountOfLeds-1)
+                        .withLEDStartIndex(led8.startIndex)
+                        .withLEDEndIndex(led8.startIndex+led8.amountOfLeds-1)
         );
     }
     public void setAnimation(SingleFadeAnimation singleFadeAnimation, LED8 led8) {
         led8.candle.setControl(
                 singleFadeAnimation
-                        .withLEDStartIndex(0)
-                        .withLEDEndIndex(led8.amountOfLeds-1)
+                        .withLEDStartIndex(led8.startIndex)
+                        .withLEDEndIndex(led8.startIndex+led8.amountOfLeds-1)
         );
     }
     public void setAnimation(StrobeAnimation strobeAnimation, LED8 led8) {
         led8.candle.setControl(
                 strobeAnimation
-                        .withLEDStartIndex(0)
-                        .withLEDEndIndex(led8.amountOfLeds-1)
+                        .withLEDStartIndex(led8.startIndex)
+                        .withLEDEndIndex(led8.startIndex+led8.amountOfLeds-1)
         );
     }
     public void setAnimation(TwinkleAnimation twinkleAnimation, LED8 led8) {
         led8.candle.setControl(
                 twinkleAnimation
-                        .withLEDStartIndex(0)
-                        .withLEDEndIndex(led8.amountOfLeds-1)
+                        .withLEDStartIndex(led8.startIndex)
+                        .withLEDEndIndex(led8.startIndex+led8.amountOfLeds-1)
         );
     }
     public void setAnimation(TwinkleOffAnimation twinkleOffAnimation, LED8 led8) {
         led8.candle.setControl(
                 twinkleOffAnimation
-                        .withLEDStartIndex(0)
-                        .withLEDEndIndex(led8.amountOfLeds-1)
+                        .withLEDStartIndex(led8.startIndex)
+                        .withLEDEndIndex(led8.startIndex+led8.amountOfLeds-1)
         );
     }
 
@@ -145,7 +145,7 @@ public class ColorAnimation {
             case Strobe -> setAnimation(strobe,led8);
             case Twinkle -> setAnimation(twinkle,led8);
             case TwinkleOff -> setAnimation(twinkleOff,led8);
-            default -> led8.candle.setControl(new SolidColor(0,led8.amountOfLeds-1).withColor(new RGBWColor(0,0,0)));
+            default -> led8.candle.setControl(new SolidColor(led8.startIndex,led8.startIndex+led8.amountOfLeds-1).withColor(new RGBWColor(0,0,0)));
         }
 
     }
