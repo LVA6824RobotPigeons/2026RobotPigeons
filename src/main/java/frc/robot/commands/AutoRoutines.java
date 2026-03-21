@@ -89,8 +89,8 @@ public final class AutoRoutines {
 
         routine.observe(hanger::isHomed).onTrue( // Only executed if hanger is homed
             Commands.sequence( // One after another
-                Commands.waitSeconds(0.5), // Waits a bit (Very small amount)
-                intake.runOnce(() -> intake.set(Intake.Position.INTAKE))  // Move to intake position
+                Commands.waitSeconds(0.5)//, // Waits a bit (Very small amount)
+//                intake.runOnce(() -> intake.set(Intake.Position.INTAKE))  // Move to intake position
             )
         );
 
