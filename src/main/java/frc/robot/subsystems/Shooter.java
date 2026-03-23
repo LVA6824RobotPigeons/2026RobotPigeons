@@ -38,6 +38,9 @@ public class Shooter extends SubsystemBase {
     private final VoltageOut voltageRequest = new VoltageOut(0);
 
     private double dashboardTargetRPM = 0.0;
+    private boolean enabled = false;           // shooter starts OFF
+    private static final double MIN_RPM = 1000; 
+    private static final double MAX_RPM = 6000;
 
     public Shooter() {
         leftMotor = new TalonFX(Ports.kShooterLeft, Ports.kCANivoreCANBus);
@@ -81,6 +84,10 @@ public class Shooter extends SubsystemBase {
         motor.getConfigurator().apply(config);
     }    
 
+    public double getCurrentRPM() {
+        return motors.get(0).getVelocity().getValue().in(RPM); // assumes all motors roughly same
+    }
+
     public void setRPM(double rpm) {
         for (final TalonFX motor : motors) {
             motor.setControl(
@@ -96,6 +103,36 @@ public class Shooter extends SubsystemBase {
                 voltageRequest
                     .withOutput(Volts.of(percentOutput * 12.0))
             );
+        }
+    }
+
+public void setRPMFromTrigger(double triggerValue) {
+        if (!enabled) return; // ignore trigger if shooter is OFF
+    
+        // deadband for tiny values
+        if (triggerValue < 0.05) triggerValue = 0;
+    
+        double desiredRPM = MIN_RPM + (MAX_RPM - MIN_RPM) * triggerValue;
+        double currentRPM = getCurrentRPM();
+    
+        // Only increase RPM if below desired; otherwise coast naturally
+        if (desiredRPM > currentRPM) {
+            setRPM(desiredRPM);
+        }
+    
+        System.out.printf("Trigger: %.2f | Desired RPM: %.0f | Current RPM: %.0f%n",
+                          triggerValue, desiredRPM, currentRPM);
+    }
+
+    public void toggleEnabled() {
+        enabled = !enabled;
+    
+        if (!enabled) {
+            stop(); // stops motors completely
+            System.out.println("Shooter OFF");
+        } else {
+            setRPM(MIN_RPM); // idle at 1000 RPM
+            System.out.println("Shooter ENABLED (IDLE 1000 RPM)");
         }
     }
 
