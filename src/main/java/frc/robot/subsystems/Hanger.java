@@ -54,9 +54,9 @@ public class Hanger extends SubsystemBase {
 
     private static final Per<DistanceUnit, AngleUnit> kHangerExtensionPerMotorAngle = Inches.of(6).div(Rotations.of(142));
     private static final Distance kExtensionTolerance = Inches.of(1);
-    private static final double kHomingPercentOutput = -0.05;
+/*   private static final double kHomingPercentOutput = -0.05;
     private static final double kHomingCurrentThresholdAmps = 8.0;
-    private static final double kHomingTimeoutSeconds = 2.0;
+    private static final double kHomingTimeoutSeconds = 2.0; */ //lines 57 to 59 are not in WCP example code?
 
     private final TalonFX motor;
     private final MotionMagicVoltage motionMagicRequest = new MotionMagicVoltage(0).withSlot(0);
@@ -118,18 +118,13 @@ public class Hanger extends SubsystemBase {
 
     public Command homingCommand() {
         return Commands.sequence(
-            runOnce(() -> setPercentOutput(kHomingPercentOutput)),
-            Commands.waitUntil(this::isHomingCurrentReached)
-                .withTimeout(kHomingTimeoutSeconds),
-            Commands.either(
-                runOnce(() -> {
-                    motor.setPosition(Position.HOMED.motorAngle());
-                    isHomed = true;
-                    set(Position.EXTEND_HOPPER);
-                }),
-                runOnce(() -> setPercentOutput(0)),
-                this::isHomingCurrentReached
-            )
+            runOnce(() -> setPercentOutput(-0.05)),
+            Commands.waitUntil(() -> motor.getSupplyCurrent().getValue().in(Amps) > 0.4),
+            runOnce(() -> {
+                motor.setPosition(Position.HOMED.motorAngle());
+                isHomed = true;
+                set(Position.EXTEND_HOPPER);
+            })
         )
         .unless(() -> isHomed)
         .withInterruptBehavior(InterruptionBehavior.kCancelIncoming);
@@ -145,9 +140,9 @@ public class Hanger extends SubsystemBase {
         return currentExtension.isNear(targetExtension, kExtensionTolerance);
     }
 
-    private boolean isHomingCurrentReached() {
+/*    private boolean isHomingCurrentReached() {
         return motor.getSupplyCurrent().getValue().in(Amps) > kHomingCurrentThresholdAmps;
-    }
+    }*/
 
     private Distance motorAngleToExtension(Angle motorAngle) {
         final Measure<DistanceUnit> extensionMeasure = motorAngle.timesRatio(kHangerExtensionPerMotorAngle);
