@@ -146,13 +146,17 @@ public class RobotContainer {
             .onTrue(intake.homingCommand())
             .onTrue(hanger.homingCommand());
 
-        driverRightTrigger().whileTrue(subsystemCommands.aimAndShoot());
-        driverRightBumper().whileTrue(subsystemCommands.shootManually());
+        //driverRightTrigger().whileTrue(subsystemCommands.aimAndShoot());
+        driverRightBumper().onTrue(Commands.runOnce(() -> shooter.toggleEnabled(), shooter));
         driverLeftTrigger().whileTrue(intake.intakeCommand());
         driverLeftBumper().onTrue(intake.runOnce(() -> intake.set(Intake.Position.STOWED)));
 
         driverPovUp().onTrue(hanger.positionCommand(Hanger.Position.HANGING));
         driverPovDown().onTrue(hanger.positionCommand(Hanger.Position.HUNG));
+    
+        shooter.setDefaultCommand(
+        Commands.run(() -> shooter.setRPMFromTrigger(driver.getRightTriggerAxis()), shooter)
+        );
     }
 
     private void configureManualDriveBindings() {
