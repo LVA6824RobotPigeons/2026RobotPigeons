@@ -68,9 +68,9 @@ public class Intake extends SubsystemBase { //makes it public
     private static final double kPivotReduction = 50.0;
     private static final AngularVelocity kMaxPivotSpeed = KrakenX60.kFreeSpeed.div(kPivotReduction);
     private static final Angle kPositionTolerance = Degrees.of(5); //angles with speed
-    private static final double kHomingPercentOutput = 0.1;
+/*    private static final double kHomingPercentOutput = 0.1;
     private static final double kHomingCurrentThresholdAmps = 6.0;
-    private static final double kHomingTimeoutSeconds = 3.0;
+    private static final double kHomingTimeoutSeconds = 3.0; */
 
     private final TalonFX pivotMotor, rollerMotor;
     private final VoltageOut pivotVoltageRequest = new VoltageOut(0);
@@ -165,7 +165,7 @@ public class Intake extends SubsystemBase { //makes it public
         );
     }  //setting speed and postion as a set control
 
-    public Command intakeCommand() {
+/*    public Command intakeCommand() {
         return startEnd(
             () -> {
                 LED8Implimentation.intakeOn();
@@ -177,7 +177,18 @@ public class Intake extends SubsystemBase { //makes it public
                 set(Speed.STOP);
             }
         );
+    } */
+
+    public Command intakeCommand() {
+        return startEnd(
+            () -> {
+                set(Position.INTAKE);
+                set(Speed.INTAKE);
+            },
+            () -> set(Speed.STOP)
+        );
     }
+
 
     public Command agitateCommand() {
         return runOnce(() -> set(Speed.INTAKE))
@@ -187,7 +198,7 @@ public class Intake extends SubsystemBase { //makes it public
                     Commands.waitUntil(this::isPositionWithinTolerance),
                     runOnce(() -> set(Position.INTAKE)),
                     Commands.waitUntil(this::isPositionWithinTolerance)
-                ) //making a sequence opf putting postion relative to speed
+                ) 
                 .repeatedly()
             )
             .handleInterrupt(() -> {
@@ -198,26 +209,21 @@ public class Intake extends SubsystemBase { //makes it public
 
     public Command homingCommand() {
         return Commands.sequence(
-            runOnce(() -> setPivotPercentOutput(kHomingPercentOutput)),
-            Commands.waitUntil(this::isHomingCurrentReached)
-                .withTimeout(kHomingTimeoutSeconds),
-            Commands.either(
-                runOnce(() -> {
-                    pivotMotor.setPosition(Position.HOMED.angle());
-                    isHomed = true;
-                    set(Position.STOWED);
-                }),
-                runOnce(() -> setPivotPercentOutput(0)),
-                this::isHomingCurrentReached
-            ) //postion is wait and apply in amplitude
+            runOnce(() -> setPivotPercentOutput(0.1)),
+            Commands.waitUntil(() -> pivotMotor.getSupplyCurrent().getValue().in(Amps) > 6),
+            runOnce(() -> {
+                pivotMotor.setPosition(Position.HOMED.angle());
+                isHomed = true;
+                set(Position.STOWED);
+            })
         )
         .unless(() -> isHomed)
         .withInterruptBehavior(InterruptionBehavior.kCancelIncoming);
     }
 
-    private boolean isHomingCurrentReached() {
+/*    private boolean isHomingCurrentReached() {
         return pivotMotor.getSupplyCurrent().getValue().in(Amps) > kHomingCurrentThresholdAmps;
-    }
+    } */
 
     @Override
     public void initSendable(SendableBuilder builder) {

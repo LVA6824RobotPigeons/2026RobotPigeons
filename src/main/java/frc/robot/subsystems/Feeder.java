@@ -25,8 +25,7 @@ import frc.robot.Ports;
 
 public class Feeder extends SubsystemBase {
     public enum Speed {
-        FEED(3000/*5000*/),
-        STOP(0);
+        FEED(5000);
 
         private final double rpm;
 
@@ -37,7 +36,7 @@ public class Feeder extends SubsystemBase {
         public AngularVelocity angularVelocity() {
             return RPM.of(rpm);
         }
-    }
+    }    
 
     private final TalonFX motor;
     private final VelocityVoltage velocityRequest = new VelocityVoltage(0).withSlot(0);
@@ -85,7 +84,7 @@ public class Feeder extends SubsystemBase {
         );
     }
 
-    public Command feedCommand() {
+/*   public Command feedCommand() {
         return startEnd(
                 () -> {
                     LED8Implimentation.feedOn();
@@ -95,6 +94,10 @@ public class Feeder extends SubsystemBase {
                     set(Speed.STOP);
                 }
                 );
+    }*/
+
+    public Command feedCommand() {
+        return startEnd(() -> set(Speed.FEED), () -> setPercentOutput(0));
     }
 
     @Override
