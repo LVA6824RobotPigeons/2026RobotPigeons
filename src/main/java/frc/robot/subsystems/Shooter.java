@@ -15,7 +15,7 @@ import com.ctre.phoenix6.configs.VoltageConfigs;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.ControlModeValue;
+//import com.ctre.phoenix6.signals.ControlModeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
@@ -28,15 +28,14 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.KrakenX60;
 import frc.robot.Ports;
 
-public class Shooter extends SubsystemBase implements AutoCloseable {
+public class Shooter extends SubsystemBase {
     private static final AngularVelocity kVelocityTolerance = RPM.of(100);
 
 
     private final TalonFX leftMotor, middleMotor, rightMotor;
     public final List<TalonFX> motors;
-    private final VelocityVoltage velocityRequest =
-            new VelocityVoltage(0).withSlot(0).withEnableFOC(false);
-    private final VoltageOut voltageRequest = new VoltageOut(0).withEnableFOC(false);
+    private final VelocityVoltage velocityRequest = new VelocityVoltage(0).withSlot(0);
+    private final VoltageOut voltageRequest = new VoltageOut(0);
 
     private double dashboardTargetRPM = 0.0;
 
@@ -53,15 +52,7 @@ public class Shooter extends SubsystemBase implements AutoCloseable {
         SmartDashboard.putData(this);
     }
 
-    private /* parts */ void configureMotor(TalonFX motor, InvertedValue invertDirection) {
-        motor.getConfigurator().apply(createConfiguration(invertDirection));
-    }
-
-    public void close() {
-        motors.forEach(TalonFX::close);
-    }
-
-    public static TalonFXConfiguration createConfiguration(InvertedValue invertDirection) {
+    private void configureMotor(TalonFX motor, InvertedValue invertDirection) {
         final TalonFXConfiguration config = new TalonFXConfiguration()
             .withMotorOutput(
                 new MotorOutputConfigs()
@@ -86,10 +77,9 @@ public class Shooter extends SubsystemBase implements AutoCloseable {
                     .withKD(0)
                     .withKV(12.0 / KrakenX60.kFreeSpeed.in(RotationsPerSecond)) // 12 volts when requesting max RPS
             );
-        return config;
-    }
-
-
+        
+        motor.getConfigurator().apply(config);
+    }    
 
     public void setRPM(double rpm) {
         for (final TalonFX motor : motors) {
@@ -124,22 +114,16 @@ public class Shooter extends SubsystemBase implements AutoCloseable {
 
     public boolean isVelocityWithinTolerance() {
         return motors.stream().allMatch(motor -> {
-            final ControlModeValue controlMode = motor.getControlMode().getValue();
-            final boolean isInVelocityMode =
-                    controlMode == ControlModeValue.VelocityVoltage
-                            || controlMode == ControlModeValue.VelocityVoltageFOC;
+            final boolean isInVelocityMode = motor.getAppliedControl().equals(velocityRequest);
             final AngularVelocity currentVelocity = motor.getVelocity().getValue();
-            final AngularVelocity targetVelocity =
-                    RotationsPerSecond.of(motor.getClosedLoopReference().getValueAsDouble());
-            final double currentRpm = Math.abs(currentVelocity.in(RPM));
-            final double targetRpm = Math.abs(targetVelocity.in(RPM));
-            return isInVelocityMode
-                    && Math.abs(currentRpm - targetRpm) <= kVelocityTolerance.in(RPM);
+            final AngularVelocity targetVelocity = velocityRequest.getVelocityMeasure();
+            return isInVelocityMode && currentVelocity.isNear(targetVelocity, kVelocityTolerance);
         });
     }
-    public AngularVelocity getVelocity(int index) {
+
+/*     public AngularVelocity getVelocity(int index) {
         return motors.get(index).getVelocity().getValue();
-    }
+    } */
 
     private void initSendable(SendableBuilder builder, TalonFX motor, String name) {
         builder.addDoubleProperty(name + " RPM", () -> motor.getVelocity().getValue().in(RPM), null);
@@ -147,9 +131,9 @@ public class Shooter extends SubsystemBase implements AutoCloseable {
         builder.addDoubleProperty(name + " Supply Current", () -> motor.getSupplyCurrent().getValue().in(Amps), null);
     }
 
-    List<TalonFX> motorsForTesting() {
+/*     List<TalonFX> motorsForTesting() {
         return motors;
-    }
+    } */
 
     @Override
     public void initSendable(SendableBuilder builder) {

@@ -66,7 +66,7 @@ public class Floor extends SubsystemBase {
         );
     }
 
-    public Command feedCommand() {
+/*    public Command feedCommand() {
         return startEnd(
                 () -> {
                     LED8Implimentation.intakeOn();
@@ -76,6 +76,10 @@ public class Floor extends SubsystemBase {
                     LED8Implimentation.intakeOff();
                     set(Speed.STOP);
                 });
+    }*/
+
+    public Command feedCommand() {
+        return startEnd(() -> set(Speed.FEED), () -> set(Speed.STOP));
     }
 
     @Override
