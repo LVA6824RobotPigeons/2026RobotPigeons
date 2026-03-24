@@ -24,8 +24,8 @@ public final class Ports {
     public static final int kHanger = 18;
 
     // PWM Ports
-    public static final int kHoodLeftServo = 3;
-    public static final int kHoodRightServo = 4;
+    public static final int kHoodLeftServo = 8;
+    public static final int kHoodRightServo = 9;
 
     // Controller Ports
     public static final int driver = 0;
