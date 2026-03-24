@@ -32,6 +32,16 @@ public class Hood extends SubsystemBase {
     private double targetPosition = 0.5;
     private Time lastUpdateTime = Seconds.of(0);
 
+    // stage selector dpad? implementation from Max's code
+    private int stage = 0; // 0 = Stage 1, 1 = Stage 2, 2 = Stage 3
+
+    private static final double[] STAGES = {0.0,0.2,0.4,0.6,0.8,1};
+
+    public void cycleStage() {
+        stage = (stage + 1) % STAGES.length; // cycles 0 -> 1 -> 2 -> 0
+        setPosition(STAGES[stage]);
+    }
+
     public Hood() {
         leftServo = new Servo(Ports.kHoodLeftServo);
         rightServo = new Servo(Ports.kHoodRightServo);
