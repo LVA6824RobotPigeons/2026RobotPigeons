@@ -98,6 +98,14 @@ public class RobotContainer {
         return driverTrigger(() -> driver.getHID().getPOV() == 180);
     }
 
+    private Trigger driverPovRight() {
+        return driverTrigger(() -> driver.getHID().getPOV() == 90);
+    }
+
+    private Trigger driverPovLeft() {
+        return driverTrigger(() -> driver.getHID().getPOV() == 270);
+    }
+
     private final SwerveTelemetry swerveTelemetry = new SwerveTelemetry(Driving.kMaxSpeed.in(MetersPerSecond));
 
     private final AutoRoutines autoRoutines = new AutoRoutines(
@@ -146,17 +154,16 @@ public class RobotContainer {
             .onTrue(intake.homingCommand())
             .onTrue(hanger.homingCommand());
 
-        //driverRightTrigger().whileTrue(subsystemCommands.aimAndShoot());
-        driverRightBumper().onTrue(Commands.runOnce(() -> shooter.toggleEnabled(), shooter));
+        driverRightTrigger().whileTrue(subsystemCommands.aimAndShoot());
+        driverRightBumper().whileTrue(subsystemCommands.shootManually());
         driverLeftTrigger().whileTrue(intake.intakeCommand());
         driverLeftBumper().onTrue(intake.runOnce(() -> intake.set(Intake.Position.STOWED)));
 
         driverPovUp().onTrue(hanger.positionCommand(Hanger.Position.HANGING));
         driverPovDown().onTrue(hanger.positionCommand(Hanger.Position.HUNG));
-    
-        shooter.setDefaultCommand(
-        Commands.run(() -> shooter.setRPMFromTrigger(driver.getRightTriggerAxis()), shooter)
-        );
+
+        driverPovRight().onTrue(Commands.runOnce(() -> hood.cycleStage()));
+        driverPovLeft().onTrue(Commands.runOnce(() -> hood.cycleStage()));        
     }
 
     private void configureManualDriveBindings() {
@@ -167,11 +174,12 @@ public class RobotContainer {
             () -> -driver.getRightX()
         );
         swerve.setDefaultCommand(manualDriveCommand);
+        /* 
         driver.pov(180).onTrue(Commands.runOnce(() -> manualDriveCommand.setLockedHeading(Rotation2d.k180deg)));
         driver.pov(-90).onTrue(Commands.runOnce(() -> manualDriveCommand.setLockedHeading(Rotation2d.kCW_90deg)));
         driver.pov(0).onTrue(Commands.runOnce(() -> manualDriveCommand.setLockedHeading(Rotation2d.kCCW_90deg)));
-        driver.pov(90).onTrue(Commands.runOnce(() -> manualDriveCommand.setLockedHeading(Rotation2d.kZero)));
-        driver.back().onTrue(Commands.runOnce(manualDriveCommand::seedFieldCentric));
+        driver.pov(90).onTrue(Commands.runOnce(() -> manualDriveCommand.setLockedHeading(Rotation2d.kZero))); */
+        driver.back().onTrue(Commands.runOnce(manualDriveCommand::seedFieldCentric)); 
     }
 
     private Command updateVisionCommand() {
