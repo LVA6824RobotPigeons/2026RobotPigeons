@@ -84,19 +84,8 @@ public class Feeder extends SubsystemBase {
         );
     }
 
-/*   public Command feedCommand() {
-        return startEnd(
-                () -> {
-                    LED8Implimentation.feedOn();
-                    set(Speed.FEED);
-                }, () -> {
-                    LED8Implimentation.feedOff();
-                    set(Speed.STOP);
-                }
-                );
-    }*/
-
     public Command feedCommand() {
+        // Velocity mode while active, then hard stop on command end.
         return startEnd(() -> set(Speed.FEED), () -> setPercentOutput(0));
     }
 

@@ -15,6 +15,7 @@ public class ColorSolid {
     public ComplexColor complexColor = null;
 
     public void setColor(RGBWColor color, LED8 led8) {
+        // Applies a static RGBW value across the configured LED segment bounds.
         led8.candle.setControl(
                 new SolidColor(
                         led8.startIndex, led8.startIndex+led8.amountOfLeds-1

@@ -8,7 +8,8 @@ public class ColorSequence {
 
     public ComplexColor complexColor = null;
 
-    public double frequency; // MS
+    // Target dwell time in milliseconds per color.
+    public double frequency;
     public int index = 0;
     public RGBWColor[] colors;
 
@@ -29,6 +30,7 @@ public class ColorSequence {
     public void tick(int refreshRate, LED8 led8) {
 
         setColor(colors[index],led8);
+        // Use wall-clock modulo so sequences stay time-based instead of call-count based.
         if(System.currentTimeMillis()%Math.max(refreshRate,frequency)<=refreshRate) index++;
         if(index == colors.length) index = 0;
 

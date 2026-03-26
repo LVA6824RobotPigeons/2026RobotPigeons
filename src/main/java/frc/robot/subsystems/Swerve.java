@@ -30,7 +30,7 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
     /* Keep track if we've ever applied the operator perspective before or not */
     private boolean m_hasAppliedOperatorPerspective = false;
 
-    /** Swerve request to apply during field-centric path following */
+    /** Reusable request and PID objects used for trajectory tracking. */
     private final SwerveRequest.ApplyFieldSpeeds pathFieldSpeedsRequest = new SwerveRequest.ApplyFieldSpeeds();
     private final PIDController pathXController = new PIDController(10, 0, 0);
     private final PIDController pathYController = new PIDController(10, 0, 0);
@@ -92,10 +92,12 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
      * @param sample Sample along the path to follow
      */
     public void followPath(SwerveSample sample) {
+        // Heading wraps at +/-pi, so enable continuous input each iteration before calculate().
         pathThetaController.enableContinuousInput(-Math.PI, Math.PI);
 
         var pose = getState().Pose;
 
+        // Start from trajectory feedforward speeds, then add PID corrections from pose error.
         var targetSpeeds = sample.getChassisSpeeds();
         targetSpeeds.vxMetersPerSecond += pathXController.calculate(
             pose.getX(), sample.x
@@ -109,6 +111,7 @@ public class Swerve extends TunerSwerveDrivetrain implements Subsystem {
 
         setControl(
             pathFieldSpeedsRequest.withSpeeds(targetSpeeds)
+                // Preserve Choreo module force feedforwards so wheel force allocation matches authored path.
                 .withWheelForceFeedforwardsX(sample.moduleForcesX())
                 .withWheelForceFeedforwardsY(sample.moduleForcesY())
         );

@@ -14,6 +14,7 @@ public class LEDManager {
     }
 
     public boolean has(ComplexColor guy, int zIndex) {
+        // Identity check intentionally avoids treating distinct effect instances as equivalent.
         if(layers.get(zIndex) == null) return false;
         else return layers.get(zIndex) == guy;
     }
@@ -35,4 +36,4 @@ public class LEDManager {
     }
 
 
-} //ok
+}

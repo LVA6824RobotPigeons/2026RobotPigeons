@@ -10,7 +10,6 @@ import java.util.Optional;
 import java.util.function.BooleanSupplier;
 
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -37,6 +36,7 @@ import frc.util.SwerveTelemetry;
  * subsystems, commands, and trigger mappings) should be declared here.
  */
 public class RobotContainer {
+    // Treat trigger pulls beyond this value as an intentional button press.
     private static final double kTriggerThreshold = 0.5;
 
     private final Swerve swerve = new Swerve();
@@ -148,20 +148,26 @@ public class RobotContainer {
      */
     private void configureBindings() {
         configureManualDriveBindings();
+        // Keep vision integration running continuously in every mode, including disabled, so the pose estimator converges before autonomous starts.
         limelight.setDefaultCommand(updateVisionCommand());
 
+        // Home mechanisms at mode entry so later position commands have a known reference.
         RobotModeTriggers.autonomous().or(RobotModeTriggers.teleop())
             .onTrue(intake.homingCommand())
             .onTrue(hanger.homingCommand());
 
+        // Driver "fire" controls: trigger uses auto-aim path, bumper uses manual shooter RPM.
         driverRightTrigger().whileTrue(subsystemCommands.aimAndShoot());
         driverRightBumper().whileTrue(subsystemCommands.shootManually());
+        // Driver "intake" controls.
         driverLeftTrigger().whileTrue(intake.intakeCommand());
         driverLeftBumper().onTrue(intake.runOnce(() -> intake.set(Intake.Position.STOWED)));
 
+        // D-pad vertical controls hanger stages.
         driverPovUp().onTrue(hanger.positionCommand(Hanger.Position.HANGING));
         driverPovDown().onTrue(hanger.positionCommand(Hanger.Position.HUNG));
 
+        // D-pad horizontal currently cycles through predefined hood stages.
         driverPovRight().onTrue(Commands.runOnce(() -> hood.cycleStage()));
         driverPovLeft().onTrue(Commands.runOnce(() -> hood.cycleStage()));        
     }
@@ -179,6 +185,7 @@ public class RobotContainer {
         driver.pov(-90).onTrue(Commands.runOnce(() -> manualDriveCommand.setLockedHeading(Rotation2d.kCW_90deg)));
         driver.pov(0).onTrue(Commands.runOnce(() -> manualDriveCommand.setLockedHeading(Rotation2d.kCCW_90deg)));
         driver.pov(90).onTrue(Commands.runOnce(() -> manualDriveCommand.setLockedHeading(Rotation2d.kZero))); */
+        // Re-zero the driver's forward direction without rebooting robot code.
         driver.back().onTrue(Commands.runOnce(manualDriveCommand::seedFieldCentric)); 
     }
 
@@ -187,6 +194,7 @@ public class RobotContainer {
             final Pose2d currentRobotPose = swerve.getState().Pose;
             final Optional<Limelight.Measurement> measurement = limelight.getMeasurement(currentRobotPose);
             measurement.ifPresent(m -> {
+                // Feed limelight pose into the drivetrain estimator with per-measurement covariance.
                 swerve.addVisionMeasurement(
                     m.poseEstimate.pose, 
                     m.poseEstimate.timestampSeconds,

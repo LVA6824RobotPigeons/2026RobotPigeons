@@ -6,6 +6,7 @@ import edu.wpi.first.units.measure.Time;
 import edu.wpi.first.wpilibj.Timer;
 
 public class Stopwatch {
+    // Infinity represents "not started" to avoid extra boolean state.
     private double startTimeInSeconds = Double.POSITIVE_INFINITY;
 
     public void start() {

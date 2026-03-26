@@ -6,11 +6,8 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.Volts;
 
-import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.RGBWColor;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.subsystems.LED8Implimentation;
@@ -22,20 +19,19 @@ import frc.robot.subsystems.LED8Implimentation;
  */
 public class Robot extends TimedRobot {
     public final RobotContainer m_robotContainer;
-    private final XboxController temp = new XboxController(0);
     
     /**
      * This function is run when the robot is first started up and should be used for any
      * initialization code.
      */
     public Robot() {
-        //Main.robot = this;
-        // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
-        // autonomous chooser on the dashboard.
-        //Main.robot = this;
+        // Initialize startup LED state before subsystems begin scheduling commands.
         LED8Implimentation.robotStart();
+        // RobotContainer owns subsystem construction, default commands, and trigger bindings.
         m_robotContainer = new RobotContainer();
+        // Expose scheduler for debugging command ownership/live state.
         SmartDashboard.putData(CommandScheduler.getInstance());
+        // Slightly lower brownout threshold to reduce brownout trips during brief current spikes.
         RobotController.setBrownoutVoltage(Volts.of(6.1));
 
     }
@@ -62,7 +58,7 @@ public class Robot extends TimedRobot {
     }
     @Override
     public void teleopExit() {
-        LED8Implimentation.teleopMode();
+        LED8Implimentation.teleopOff();
     }
 
     @Override

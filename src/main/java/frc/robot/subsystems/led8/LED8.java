@@ -21,6 +21,7 @@ public class LED8 {
     }
 
     public void addColor(ComplexColor complexColor, int zIndex) {
+        // Higher z-index values are rendered on top of lower-priority effects.
         if(!manager.has(complexColor,zIndex)) manager.add(complexColor,zIndex);
         if(manager.getCurrentColor() == complexColor) refresh();
     }
@@ -29,6 +30,7 @@ public class LED8 {
         if(manager.remove(zIndex) != null && previousTop != manager.getCurrentColor()) refresh();
     }
     public void refresh() {
+        // Re-apply the current top layer immediately after layer stack changes.
         System.out.println("Refreshed");
         candle.clearAllAnimations();
         if(manager.getCurrentColor() != null) manager.getCurrentColor().tick(1000,this);
@@ -37,6 +39,7 @@ public class LED8 {
 
     public void process(int refreshRate) {
 
+        // Called periodically to advance dynamic animations/sequences.
         ComplexColor color = manager.getCurrentColor();
         if(color != null) color.tick(refreshRate,this);
         else candle.setControl(new SolidColor(startIndex,startIndex+amountOfLeds-1).withColor(new RGBWColor(0,0,0)));

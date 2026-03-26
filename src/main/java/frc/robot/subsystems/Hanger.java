@@ -35,6 +35,7 @@ import frc.robot.Ports;
 
 public class Hanger extends SubsystemBase {
     public enum Position {
+        // Extension targets are defined in linear inches and converted to motor rotations.
         HOMED(0),
         EXTEND_HOPPER(2),
         HANGING(6),
@@ -48,16 +49,12 @@ public class Hanger extends SubsystemBase {
 
         public Angle motorAngle() {
             final Measure<AngleUnit> angleMeasure = Inches.of(inches).divideRatio(kHangerExtensionPerMotorAngle);
-            return Rotations.of(angleMeasure.in(Rotations)); // Promote from Measure<AngleUnit> to Angle
+            return Rotations.of(angleMeasure.in(Rotations));
         }
     }
 
     private static final Per<DistanceUnit, AngleUnit> kHangerExtensionPerMotorAngle = Inches.of(6).div(Rotations.of(142));
     private static final Distance kExtensionTolerance = Inches.of(1);
-/*   private static final double kHomingPercentOutput = -0.05;
-    private static final double kHomingCurrentThresholdAmps = 8.0;
-    private static final double kHomingTimeoutSeconds = 2.0; */ //lines 57 to 59 are not in WCP example code?
-
     private final TalonFX motor;
     private final MotionMagicVoltage motionMagicRequest = new MotionMagicVoltage(0).withSlot(0);
     private final VoltageOut voltageRequest = new VoltageOut(0);
@@ -118,7 +115,9 @@ public class Hanger extends SubsystemBase {
 
     public Command homingCommand() {
         return Commands.sequence(
+            // Drive downward into hard stop to establish a repeatable zero extension.
             runOnce(() -> setPercentOutput(-0.05)),
+            // Current threshold indicates stop contact.
             Commands.waitUntil(() -> motor.getSupplyCurrent().getValue().in(Amps) > 0.4),
             runOnce(() -> {
                 motor.setPosition(Position.HOMED.motorAngle());
@@ -140,13 +139,9 @@ public class Hanger extends SubsystemBase {
         return currentExtension.isNear(targetExtension, kExtensionTolerance);
     }
 
-/*    private boolean isHomingCurrentReached() {
-        return motor.getSupplyCurrent().getValue().in(Amps) > kHomingCurrentThresholdAmps;
-    }*/
-
     private Distance motorAngleToExtension(Angle motorAngle) {
         final Measure<DistanceUnit> extensionMeasure = motorAngle.timesRatio(kHangerExtensionPerMotorAngle);
-        return Inches.of(extensionMeasure.in(Inches)); // Promote from Measure<DistanceUnit> to Distance
+        return Inches.of(extensionMeasure.in(Inches));
     }
 
     @Override

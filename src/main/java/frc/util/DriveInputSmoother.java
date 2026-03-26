@@ -8,7 +8,9 @@ import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.numbers.N2;
 
 public class DriveInputSmoother {
+    // Ignore small stick noise around center.
     private static final double kJoystickDeadband = 0.15;
+    // Exponent > 1 gives finer low-speed control while still reaching full-scale output.
     private static final double kCurveExponent = 1.5;
 
     private final DoubleSupplier forwardInput;
@@ -26,6 +28,7 @@ public class DriveInputSmoother {
     }
 
     public ManualDriveInput getSmoothedInput() { 
+        // Deadband + directional power curve preserves joystick direction while reshaping magnitude.
         final Vector<N2> rawTranslationInput = VecBuilder.fill(forwardInput.getAsDouble(), leftInput.getAsDouble());
         final Vector<N2> deadbandedTranslationInput = MathUtil.applyDeadband(rawTranslationInput, kJoystickDeadband);
         final Vector<N2> curvedTranslationInput = MathUtil.copyDirectionPow(deadbandedTranslationInput, kCurveExponent);

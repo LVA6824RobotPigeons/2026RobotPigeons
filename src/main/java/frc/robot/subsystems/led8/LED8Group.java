@@ -16,6 +16,7 @@ public class LED8Group {
     }
 
     public void addColor(ComplexColor complexColor, int zIndex) {
+        // Mirror the same layer change to every member strip.
         leds.forEach((i) -> i.addColor(complexColor,zIndex));
     }
     public void removeColor(int zIndex) {

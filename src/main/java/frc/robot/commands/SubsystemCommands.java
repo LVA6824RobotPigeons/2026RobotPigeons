@@ -2,11 +2,8 @@ package frc.robot.commands;
 
 import java.util.function.DoubleSupplier;
 
-import com.ctre.phoenix6.signals.RGBWColor;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import frc.robot.Constants;
-import frc.robot.Ports;
 import frc.robot.subsystems.Feeder;
 import frc.robot.subsystems.Floor;
 import frc.robot.subsystems.Hanger;
@@ -76,8 +73,11 @@ public final class SubsystemCommands {
 
         final AimAndDriveCommand aimAndDriveCommand = new AimAndDriveCommand(swerve, yInput, xInput);
         final PrepareShotCommand prepareShotCommand = new PrepareShotCommand(shooter, hood, () -> swerve.getState().Pose);
-        // Aims and then drives, then prepares shot after 0.25 seconds, then waits until aimed and ready to shoot, then "feeds" for some reason
-        // (All at the same time)
+        /* 
+        *Run aiming + shot preparation in parallel, then release the game piece only when both
+        *subsystems report ready. Delay before PrepareShot avoids applying a stale pose snapshot
+        *from the first scheduler tick of the command.
+        */
         return Commands.parallel(
             aimAndDriveCommand,
             Commands.waitSeconds(0.25)
@@ -89,18 +89,24 @@ public final class SubsystemCommands {
 
     public Command shootManually() {
         return shooter.dashboardSpinUpCommand()
-            .andThen(feed()) // Shoots them out I think
-            .handleInterrupt(shooter::stop); // Stops shooter
+            .andThen(feed())
+            // If the driver releases the button before feed completes, always spin down shooter.
+            .handleInterrupt(shooter::stop);
     }
 
     private Command feed() {
-        // One after another
+        /* 
+        *Fixed handoff sequence:
+        *1) Let shooter/flywheel settle a little
+        *2) Start feeder
+        *3) Start floor & intake agitation shortly after to keep pieces moving
+        */
         return Commands.sequence(
-            Commands.waitSeconds(0.25), // Waits
-            Commands.parallel( // All at once
-                feeder.feedCommand(), // Starts feeding
-                Commands.waitSeconds(0.125) // Waits a lil
-                    .andThen(floor.feedCommand().alongWith(intake.agitateCommand())) // Spits out
+            Commands.waitSeconds(0.25),
+            Commands.parallel(
+                feeder.feedCommand(),
+                Commands.waitSeconds(0.125)
+                    .andThen(floor.feedCommand().alongWith(intake.agitateCommand()))
             )
         );
     }
