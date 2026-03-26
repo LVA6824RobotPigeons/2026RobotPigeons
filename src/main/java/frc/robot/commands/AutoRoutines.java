@@ -66,7 +66,7 @@ public final class AutoRoutines {
     }
 
     public void configure() {
-        /* add smart dash keys and init routine */
+        // Register autonomous options once at startup and schedule whichever option the dashboard currently selects whenever autonomous mode is active.
         autoChooser.addRoutine("Outpost and Depot", this::outpostAndDepotRoutine);
         SmartDashboard.putData("Auto Chooser", autoChooser);
         RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());
@@ -74,50 +74,54 @@ public final class AutoRoutines {
 
     private AutoRoutine outpostAndDepotRoutine() {
 
-        final AutoRoutine routine = autoFactory.newRoutine("Outpost and Depot"); // Makes new routine
+        final AutoRoutine routine = autoFactory.newRoutine("Outpost and Depot");
         final AutoTrajectory startToOutpost = OutpostAndDepotTrajectory$0.asAutoTraj(routine);
         final AutoTrajectory outpostToDepot = OutpostAndDepotTrajectory$1.asAutoTraj(routine);
         final AutoTrajectory depotToShootingPose = OutpostAndDepotTrajectory$2.asAutoTraj(routine);
         final AutoTrajectory shootingPoseToTower = OutpostAndDepotTrajectory$3.asAutoTraj(routine);
 
         routine.active().onTrue(
-            Commands.sequence( // One after another
-                startToOutpost.resetOdometry(), // Resets "movement tracker"
-                startToOutpost.cmd() // Move to outpost (The area where balls are loaded by people
+            // First leg always seeds odometry from the authored trajectory start pose.
+            Commands.sequence(
+                startToOutpost.resetOdometry(),
+                startToOutpost.cmd()
             )
         );
 
-        routine.observe(hanger::isHomed).onTrue( // Only executed if hanger is homed
-            Commands.sequence( // One after another
-                Commands.waitSeconds(0.5)//, // Waits a bit (Very small amount)
-//                intake.runOnce(() -> intake.set(Intake.Position.INTAKE))  // Move to intake position
+        routine.observe(hanger::isHomed).onTrue(
+            // Placeholder for any "post-home" autonomous prep actions.
+            Commands.sequence(
+                Commands.waitSeconds(0.5)
             )
         );
 
-        startToOutpost.doneDelayed(1).onTrue(outpostToDepot.cmd()); // After 1 second, it drives to depot
+        startToOutpost.doneDelayed(1).onTrue(outpostToDepot.cmd());
 
-        outpostToDepot.atTimeBeforeEnd(1).onTrue(intake.intakeCommand()); // Starts intake 1 second before it arrives at depot
-        outpostToDepot.doneDelayed(0.1).onTrue(depotToShootingPose.cmd()); // Wait 0.1 second and then move to shooting position
+        // Begin intake while approaching depot so pieces are acquired during transit.
+        outpostToDepot.atTimeBeforeEnd(1).onTrue(intake.intakeCommand());
+        outpostToDepot.doneDelayed(0.1).onTrue(depotToShootingPose.cmd());
 
-        depotToShootingPose.active().whileTrue(limelight.idle()); // Goes to shooting move when limelight is idle
-        depotToShootingPose.atTime(0.5).onTrue( // 0.5 seconds after command starts, it aims and then shoot
-            Commands.parallel( // Both at once
-                shooter.spinUpCommand(2600), // Starts spinning wheels to shoot
-                hood.positionCommand(0.32) // Moves to position until within tolerance
+        // Keep Limelight subsystem scheduled so network table updates are fresh during this leg.
+        depotToShootingPose.active().whileTrue(limelight.idle());
+        depotToShootingPose.atTime(0.5).onTrue(
+            // Pre-spin shooter and pre-position hood before final aim-and-fire sequence.
+            Commands.parallel(
+                shooter.spinUpCommand(2600),
+                hood.positionCommand(0.32)
             )
         );
-        depotToShootingPose.done().onTrue( // Executes once in shooting position
-            Commands.sequence( // One after another
+        depotToShootingPose.done().onTrue(
+            Commands.sequence(
                 subsystemCommands.aimAndShoot()
-                    .withTimeout(5), // Aims and shoots, but force killed after 5 seconds
-                shootingPoseToTower.cmd() // Starts moving to tower
+                    .withTimeout(5),
+                shootingPoseToTower.cmd()
             )
         );
 
-        shootingPoseToTower.active().whileTrue(limelight.idle()); // Move to tower when limelight is idle
-        shootingPoseToTower.active().onTrue(hanger.positionCommand(Hanger.Position.HANGING)); // Activates tower command when in hanging position
-        shootingPoseToTower.done().onTrue(hanger.positionCommand(Hanger.Position.HUNG)); // Finishes tower command when position is in hung
+        shootingPoseToTower.active().whileTrue(limelight.idle());
+        shootingPoseToTower.active().onTrue(hanger.positionCommand(Hanger.Position.HANGING));
+        shootingPoseToTower.done().onTrue(hanger.positionCommand(Hanger.Position.HUNG));
 
-        return routine; // Finishes routine
+        return routine;
     }
 }

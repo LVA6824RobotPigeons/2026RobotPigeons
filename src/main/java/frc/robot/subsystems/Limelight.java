@@ -26,6 +26,7 @@ public class Limelight extends SubsystemBase {
     }
 
     public Optional<Measurement> getMeasurement(Pose2d currentRobotPose) {
+        // Provide robot yaw hint so MT2 can fuse gyro heading for better translational stability.
         LimelightHelpers.SetRobotOrientation(name, currentRobotPose.getRotation().getDegrees(), 0, 0, 0, 0, 0);
 
         final PoseEstimate poseEstimate_MegaTag1 = LimelightHelpers.getBotPoseEstimate_wpiBlue(name);
@@ -39,13 +40,13 @@ public class Limelight extends SubsystemBase {
             return Optional.empty();
         }
 
-        // Combine the readings from MegaTag1 and MegaTag2:
-        // 1. Use the more stable position from MegaTag2
-        // 2. Use the rotation from MegaTag1 (with low confidence) to counteract gyro drift
+        // Hybrid pose: keep MT2 translation, borrow MT1 heading.
+        // Heading covariance remains intentionally loose below.
         poseEstimate_MegaTag2.pose = new Pose2d(
             poseEstimate_MegaTag2.pose.getTranslation(),
             poseEstimate_MegaTag1.pose.getRotation()
         );
+        // Heavily trust translation, weakly trust heading.
         final Matrix<N3, N1> standardDeviations = VecBuilder.fill(0.1, 0.1, 10.0);
 
         posePublisher.set(poseEstimate_MegaTag2.pose);

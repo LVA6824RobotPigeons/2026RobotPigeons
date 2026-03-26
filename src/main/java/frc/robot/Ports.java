@@ -5,6 +5,7 @@ import com.ctre.phoenix6.CANBus;
 public final class Ports {
 
     // CAN Buses
+    // CANivore bus name must match Phoenix Tuner configuration.
     public static final CANBus kCANivoreCANBus = new CANBus("Systems");
 
     // CANdle
@@ -28,6 +29,7 @@ public final class Ports {
     public static final int kHoodRightServo = 4;
 
     // Controller Ports
+    // USB index as shown in Driver Station USB tab.
     public static final int driver = 0;
 
 }
