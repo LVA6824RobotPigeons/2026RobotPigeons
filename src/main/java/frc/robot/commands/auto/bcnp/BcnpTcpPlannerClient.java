@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.channels.NotYetConnectedException;
 import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -213,6 +214,9 @@ public final class BcnpTcpPlannerClient implements AutoPlannerClient {
         try {
             if (linkState == AutoLinkState.CONNECTING) {
                 finishConnect(now);
+                if (!isChannelReadyForIo()) {
+                    return;
+                }
             }
 
             readIncoming(now);
@@ -264,7 +268,12 @@ public final class BcnpTcpPlannerClient implements AutoPlannerClient {
 
     private void readIncoming(long now) throws IOException {
         readBuffer.clear();
-        final int read = channel.read(readBuffer);
+        final int read;
+        try {
+            read = channel.read(readBuffer);
+        } catch (NotYetConnectedException e) {
+            return;
+        }
         if (read < 0) {
             setFault("REMOTE_CLOSED", "Planner endpoint closed connection.");
             disconnect();
@@ -539,5 +548,9 @@ public final class BcnpTcpPlannerClient implements AutoPlannerClient {
             }
             channel = null;
         }
+    }
+
+    private boolean isChannelReadyForIo() {
+        return channel != null && channel.isOpen() && channel.isConnected();
     }
 }
