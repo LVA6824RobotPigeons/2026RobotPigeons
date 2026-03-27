@@ -21,6 +21,7 @@ import frc.robot.commands.ManualDriveCommand;
 import frc.robot.commands.SubsystemCommands;
 import frc.robot.subsystems.Feeder;
 import frc.robot.subsystems.Floor;
+import frc.robot.commands.auto.bcnp.BcnpTcpPlannerClient;
 import frc.robot.subsystems.Hanger;
 import frc.robot.subsystems.Hood;
 import frc.robot.subsystems.Intake;
@@ -201,6 +202,11 @@ public class RobotContainer {
                     m.standardDeviations
                 );
             });
+
+            // Periodically feed opponent tracks back to the active tactical planner
+            if (autoRoutines.getPlannerClient() instanceof BcnpTcpPlannerClient bcnp) {
+                bcnp.sendOpponentUpdates(limelight.getOpponents());
+            }
         })
         .ignoringDisable(true);
     }

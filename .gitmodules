@@ -1,0 +1,3 @@
+[submodule "bcnp"]
+	path = libs/bcnp
+	url = https://github.com/jondoebeep/bcnp

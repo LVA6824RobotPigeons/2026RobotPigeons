@@ -1,0 +1,445 @@
+{
+  "$schema": "../../../../libs/bcnp/schema/bcnp_schema.json",
+  "version": "3.4",
+  "namespace": "bcnp",
+  "description": "BCNP autonomous planner schema used by 2026RobotPigeons.",
+  "messages": [
+    {
+      "id": 2001,
+      "name": "AutoPlanRequest",
+      "description": "Request planner route for selected autonomous profile and current robot pose.",
+      "fields": [
+        {
+          "name": "profileId",
+          "type": "uint16"
+        },
+        {
+          "name": "alliance",
+          "type": "uint8"
+        },
+        {
+          "name": "reserved",
+          "type": "uint8"
+        },
+        {
+          "name": "poseXmm",
+          "type": "int32"
+        },
+        {
+          "name": "poseYmm",
+          "type": "int32"
+        },
+        {
+          "name": "headingMilliRad",
+          "type": "int32"
+        }
+      ]
+    },
+    {
+      "id": 2002,
+      "name": "AutoPlanResponse",
+      "description": "Planner response with plan metadata and phase count.",
+      "fields": [
+        {
+          "name": "planId",
+          "type": "uint32"
+        },
+        {
+          "name": "flags",
+          "type": "uint16"
+        },
+        {
+          "name": "phaseCount",
+          "type": "uint16"
+        },
+        {
+          "name": "planChecksum",
+          "type": "uint32"
+        },
+        {
+          "name": "objectiveId",
+          "type": "uint16"
+        },
+        {
+          "name": "policySource",
+          "type": "uint8"
+        },
+        {
+          "name": "reserved0",
+          "type": "uint8"
+        },
+        {
+          "name": "globalConfidencePermille",
+          "type": "uint16"
+        },
+        {
+          "name": "reserved1",
+          "type": "uint16"
+        }
+      ]
+    },
+    {
+      "id": 2003,
+      "name": "AutoPhaseCommand",
+      "description": "Planner-issued phase command metadata for robot executor.",
+      "fields": [
+        {
+          "name": "planId",
+          "type": "uint32"
+        },
+        {
+          "name": "phaseSeq",
+          "type": "uint16"
+        },
+        {
+          "name": "phaseType",
+          "type": "uint16"
+        },
+        {
+          "name": "timeoutMs",
+          "type": "uint16"
+        },
+        {
+          "name": "flags",
+          "type": "uint16"
+        },
+        {
+          "name": "arg0",
+          "type": "int32"
+        },
+        {
+          "name": "arg1",
+          "type": "int32"
+        },
+        {
+          "name": "intentType",
+          "type": "uint8"
+        },
+        {
+          "name": "safetyClass",
+          "type": "uint8"
+        },
+        {
+          "name": "policySource",
+          "type": "uint8"
+        },
+        {
+          "name": "fallbackHint",
+          "type": "uint8"
+        },
+        {
+          "name": "objectiveId",
+          "type": "uint16"
+        },
+        {
+          "name": "pathId",
+          "type": "uint16"
+        },
+        {
+          "name": "confidencePermille",
+          "type": "uint16"
+        },
+        {
+          "name": "deadlineMs",
+          "type": "uint16"
+        }
+      ]
+    },
+    {
+      "id": 2004,
+      "name": "AutoPhaseAck",
+      "description": "Robot acknowledgment for phase acceptance/rejection.",
+      "fields": [
+        {
+          "name": "planId",
+          "type": "uint32"
+        },
+        {
+          "name": "phaseSeq",
+          "type": "uint16"
+        },
+        {
+          "name": "decision",
+          "type": "uint8"
+        },
+        {
+          "name": "reasonCode",
+          "type": "uint8"
+        },
+        {
+          "name": "reasonDetail",
+          "type": "uint16"
+        },
+        {
+          "name": "flags",
+          "type": "uint16"
+        }
+      ]
+    },
+    {
+      "id": 2005,
+      "name": "AutoHeartbeat",
+      "description": "Session heartbeat for link liveness.",
+      "fields": [
+        {
+          "name": "sessionId",
+          "type": "uint32"
+        },
+        {
+          "name": "sequence",
+          "type": "uint32"
+        },
+        {
+          "name": "timestampMs",
+          "type": "uint32"
+        }
+      ]
+    },
+    {
+      "id": 2006,
+      "name": "AutoAbort",
+      "description": "Abort signal from planner or robot safety gate.",
+      "fields": [
+        {
+          "name": "reasonCode",
+          "type": "uint16"
+        },
+        {
+          "name": "source",
+          "type": "uint16"
+        },
+        {
+          "name": "detail",
+          "type": "uint32"
+        }
+      ]
+    },
+    {
+      "id": 2007,
+      "name": "AutoTelemetry",
+      "description": "Robot telemetry/status for planner-side diagnostics.",
+      "fields": [
+        {
+          "name": "planId",
+          "type": "uint32"
+        },
+        {
+          "name": "phaseSeq",
+          "type": "uint16"
+        },
+        {
+          "name": "state",
+          "type": "uint16"
+        },
+        {
+          "name": "estimatedFuelScore",
+          "type": "uint16"
+        },
+        {
+          "name": "fallbackActive",
+          "type": "uint16"
+        },
+        {
+          "name": "poseXmm",
+          "type": "int32"
+        },
+        {
+          "name": "poseYmm",
+          "type": "int32"
+        },
+        {
+          "name": "objectiveId",
+          "type": "uint16"
+        },
+        {
+          "name": "intentType",
+          "type": "uint8"
+        },
+        {
+          "name": "policySource",
+          "type": "uint8"
+        },
+        {
+          "name": "confidencePermille",
+          "type": "uint16"
+        },
+        {
+          "name": "rejectReasonCode",
+          "type": "uint16"
+        },
+        {
+          "name": "fallbackReasonCode",
+          "type": "uint16"
+        },
+        {
+          "name": "deadlineSlackMs",
+          "type": "int16"
+        }
+      ]
+    },
+    {
+      "id": 2008,
+      "name": "AutoShotHint",
+      "description": "Coprocessor-computed shot parameters for velocity-compensated aiming.",
+      "fields": [
+        {
+          "name": "aimOffsetMrad",
+          "type": "int16"
+        },
+        {
+          "name": "shooterRpm",
+          "type": "uint16"
+        },
+        {
+          "name": "hoodPositionPermille",
+          "type": "uint16"
+        },
+        {
+          "name": "fireWindowMrad",
+          "type": "uint16"
+        },
+        {
+          "name": "confidencePermille",
+          "type": "uint16"
+        },
+        {
+          "name": "distanceToHubMm",
+          "type": "uint16"
+        },
+        {
+          "name": "flags",
+          "type": "uint16"
+        },
+        {
+          "name": "reserved",
+          "type": "uint16"
+        }
+      ]
+    },
+    {
+      "id": 2009,
+      "name": "AutoWorldUpdate",
+      "description": "Robot feedback to coprocessor: fuel state, shot results, phase events.",
+      "fields": [
+        {
+          "name": "fuelHeld",
+          "type": "uint8"
+        },
+        {
+          "name": "lastShotSuccess",
+          "type": "uint8"
+        },
+        {
+          "name": "phaseSeqCompleted",
+          "type": "uint16"
+        },
+        {
+          "name": "eventFlags",
+          "type": "uint16"
+        },
+        {
+          "name": "robotVxMmS",
+          "type": "int16"
+        },
+        {
+          "name": "robotVyMmS",
+          "type": "int16"
+        },
+        {
+          "name": "poseXmm",
+          "type": "int32"
+        },
+        {
+          "name": "poseYmm",
+          "type": "int32"
+        },
+        {
+          "name": "headingMrad",
+          "type": "int16"
+        },
+        {
+          "name": "reserved",
+          "type": "uint16"
+        }
+      ]
+    },
+    {
+      "id": 2010,
+      "name": "AutoWaypointDelta",
+      "description": "Coprocessor-specified waypoints for dynamic path following. Each message carries one waypoint.",
+      "fields": [
+        {
+          "name": "planId",
+          "type": "uint32"
+        },
+        {
+          "name": "phaseSeq",
+          "type": "uint16"
+        },
+        {
+          "name": "waypointIndex",
+          "type": "uint8"
+        },
+        {
+          "name": "waypointCount",
+          "type": "uint8"
+        },
+        {
+          "name": "xMm",
+          "type": "int32"
+        },
+        {
+          "name": "yMm",
+          "type": "int32"
+        },
+        {
+          "name": "headingMrad",
+          "type": "int16"
+        },
+        {
+          "name": "maxVelocityMmS",
+          "type": "uint16"
+        }
+      ]
+    },
+    {
+      "id": 2011,
+      "name": "AutoOpponentUpdate",
+      "description": "Robot sends Limelight-detected opponents to coprocessor. Sent continuously.",
+      "fields": [
+        {
+          "name": "trackIndex",
+          "type": "uint8"
+        },
+        {
+          "name": "trackCount",
+          "type": "uint8"
+        },
+        {
+          "name": "poseXmm",
+          "type": "int32"
+        },
+        {
+          "name": "poseYmm",
+          "type": "int32"
+        },
+        {
+          "name": "velocityXmmS",
+          "type": "int16"
+        },
+        {
+          "name": "velocityYmmS",
+          "type": "int16"
+        },
+        {
+          "name": "confidencePermille",
+          "type": "uint16"
+        },
+        {
+          "name": "reserved",
+          "type": "uint16"
+        }
+      ]
+    }
+  ]
+}

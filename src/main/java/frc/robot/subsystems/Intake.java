@@ -163,6 +163,13 @@ public class Intake extends SubsystemBase {
         );
     }
 
+    /**
+     * @return Current draw of the roller motor in amps, for fuel detection.
+     */
+    public double getRollerCurrent() {
+        return rollerMotor.getSupplyCurrent().getValue().in(Amps);
+    }
+
     public Command intakeCommand() {
         // Hold intake in deployed/feed state for entire command lifetime.
         return startEnd(
