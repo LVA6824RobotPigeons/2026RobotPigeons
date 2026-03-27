@@ -30,13 +30,13 @@ public final class Constants {
         // gates execution.
         public static final PlannerExecutionMode kPlannerExecutionMode = PlannerExecutionMode.ACTIVE;
         public static final String kBcnpHost = "10.68.24.1";
-        public static final int kBcnpPort = 5812;
+        public static final int kBcnpPort = 5801;
         public static final String kBcnpSchemaDeployPath = "bcnp/messages.json";
         public static final int kBcnpSchemaHashFallback = 0x1A2B3C4D;
-        public static final long kBcnpConnectRetryMs = 1000;
+        public static final long kBcnpConnectRetryMs = 2000;
         public static final long kBcnpHeartbeatPeriodMs = 100;
-        public static final long kBcnpHeartbeatTimeoutMs = 350;
-        public static final long kBcnpPlanFreshMs = 750;
+        public static final long kBcnpHeartbeatTimeoutMs = 500;
+        public static final long kBcnpPlanFreshMs = 1000;
         public static final int kActivePlanMinConfidencePermille = 450;
     }
 
