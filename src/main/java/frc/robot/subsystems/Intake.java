@@ -171,8 +171,8 @@ public class Intake extends SubsystemBase {
     }
 
     public Command intakeCommand() {
-        // Hold intake in deployed/feed state for entire command lifetime.
-        return startEnd(
+        // Continuously assert deployed/feed state so command scheduling reliably leaves both motors in the expected modes.
+        return runEnd(
             () -> {
                 set(Position.INTAKE);
                 set(Speed.INTAKE);

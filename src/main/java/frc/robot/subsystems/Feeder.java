@@ -39,8 +39,7 @@ public class Feeder extends SubsystemBase {
     }    
 
     private final TalonFX motor;
-    private final VelocityVoltage velocityRequest = new VelocityVoltage(0).withSlot(0);
-    private final VoltageOut voltageRequest = new VoltageOut(0);
+    private AngularVelocity targetVelocity = RPM.of(0);
 
     public Feeder() {
         motor = new TalonFX(Ports.kFeeder, Ports.kCANivoreCANBus);
@@ -71,16 +70,16 @@ public class Feeder extends SubsystemBase {
     }
 
     public void set(Speed speed) {
+        targetVelocity = speed.angularVelocity();
         motor.setControl(
-            velocityRequest
-                .withVelocity(speed.angularVelocity())
+            new VelocityVoltage(targetVelocity)
+                .withSlot(0)
         );
     }
 
     public void setPercentOutput(double percentOutput) {
         motor.setControl(
-            voltageRequest
-                .withOutput(Volts.of(percentOutput * 12.0))
+            new VoltageOut(Volts.of(percentOutput * 12.0))
         );
     }
 
@@ -93,6 +92,7 @@ public class Feeder extends SubsystemBase {
     public void initSendable(SendableBuilder builder) {
         builder.addStringProperty("Command", () -> getCurrentCommand() != null ? getCurrentCommand().getName() : "null", null);
         builder.addDoubleProperty("RPM", () -> motor.getVelocity().getValue().in(RPM), null);
+        builder.addDoubleProperty("Target RPM", () -> targetVelocity.in(RPM), null);
         builder.addDoubleProperty("Stator Current", () -> motor.getStatorCurrent().getValue().in(Amps), null);
         builder.addDoubleProperty("Supply Current", () -> motor.getSupplyCurrent().getValue().in(Amps), null);
     }
