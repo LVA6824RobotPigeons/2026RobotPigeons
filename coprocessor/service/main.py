@@ -15,7 +15,7 @@ from coprocessor.service.session import SessionConfig
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="BCNP autonomous planner service scaffold")
     parser.add_argument("--host", default="0.0.0.0", help="TCP bind host")
-    parser.add_argument("--port", default=5812, type=int, help="TCP bind port")
+    parser.add_argument("--port", default=5801, type=int, help="TCP bind port")
     parser.add_argument(
         "--schema-path",
         default="src/main/deploy/bcnp/messages.json",
@@ -30,7 +30,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--global-confidence-permille-hint", default=800, type=int)
     parser.add_argument(
         "--health-port",
-        default=5813,
+        default=5809,
         type=int,
         help="Health endpoint port; set <0 to disable",
     )

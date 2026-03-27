@@ -53,6 +53,12 @@ WEIGHT_SAFETY_MARGIN = 3.0
 WEIGHT_OPPONENT_RISK = 4.0
 WEIGHT_SHIFT_ALIGNMENT = 2.5
 
+
+def _score_to_confidence_permille(score: "CandidateScore") -> int:
+    """Map the weighted tactical score into a bounded 0-1000 confidence value."""
+    return max(0, min(1000, int(score.total * 100)))
+
+
 class CandidateType(IntEnum):
     COLLECT_AND_SCORE = 1
     COLLECT_AND_SCORE_ON_MOVE = 2
@@ -431,7 +437,7 @@ class TacticalPlanner:
         phases.append(TacticalPhase(
             phase_program=PhaseProgram(
                 PHASE_SEED_AND_DEPART, 5000, INTENT_DRIVE, SAFETY_STANDARD,
-                confidence_permille=int(score.total * 100),
+                confidence_permille=_score_to_confidence_permille(score),
             ),
             waypoints=transit_to_zone_wps,
         ))
@@ -440,7 +446,7 @@ class TacticalPlanner:
         phases.append(TacticalPhase(
             phase_program=PhaseProgram(
                 PHASE_COLLECT_DEPOT_FUEL, 3000, INTENT_COLLECT, SAFETY_STANDARD,
-                confidence_permille=int(score.total * 100),
+                confidence_permille=_score_to_confidence_permille(score),
             ),
             waypoints=collect_wps,
         ))
@@ -450,7 +456,7 @@ class TacticalPlanner:
         phases.append(TacticalPhase(
             phase_program=PhaseProgram(
                 PHASE_TRANSIT_AND_PRESPIN, 4000, transit_intent, SAFETY_STANDARD,
-                confidence_permille=int(score.total * 100),
+                confidence_permille=_score_to_confidence_permille(score),
             ),
             waypoints=transit_to_hub_wps,
         ))
@@ -460,7 +466,7 @@ class TacticalPlanner:
             phases.append(TacticalPhase(
                 phase_program=PhaseProgram(
                     PHASE_AIM_AND_SHOOT, 4000, INTENT_SCORE, SAFETY_SCORING,
-                    confidence_permille=int(score.total * 100),
+                    confidence_permille=_score_to_confidence_permille(score),
                 ),
                 waypoints=[Waypoint(
                     x_mm=hub_approach.x_mm, y_mm=hub_approach.y_mm,
@@ -473,7 +479,7 @@ class TacticalPlanner:
         phases.append(TacticalPhase(
             phase_program=PhaseProgram(
                 PHASE_SAFE_EXIT, 1500, INTENT_SAFE_EXIT, SAFETY_STANDARD,
-                confidence_permille=int(score.total * 100),
+                confidence_permille=_score_to_confidence_permille(score),
             ),
             waypoints=self._safe_exit_waypoints(state),
         ))
@@ -481,7 +487,7 @@ class TacticalPlanner:
         routine = ClassicalRoutine(
             profile_id=100 + self._plan_count,
             objective_id=300 + candidate.candidate_type,
-            global_confidence_permille=int(score.total * 100),
+            global_confidence_permille=_score_to_confidence_permille(score),
             phases=tuple(p.phase_program for p in phases),
             policy_source=POLICY_SOURCE_CLASSICAL,
         )
@@ -507,14 +513,14 @@ class TacticalPlanner:
             TacticalPhase(
                 phase_program=PhaseProgram(
                     PHASE_TRANSIT_AND_PRESPIN, 4000, INTENT_DRIVE, SAFETY_STANDARD,
-                    confidence_permille=int(score.total * 100),
+                    confidence_permille=_score_to_confidence_permille(score),
                 ),
                 waypoints=transit_wps,
             ),
             TacticalPhase(
                 phase_program=PhaseProgram(
                     PHASE_AIM_AND_SHOOT, 4000, INTENT_SCORE, SAFETY_SCORING,
-                    confidence_permille=int(score.total * 100),
+                    confidence_permille=_score_to_confidence_permille(score),
                 ),
                 waypoints=[Waypoint(
                     x_mm=hub_approach.x_mm, y_mm=hub_approach.y_mm,
@@ -525,7 +531,7 @@ class TacticalPlanner:
             TacticalPhase(
                 phase_program=PhaseProgram(
                     PHASE_SAFE_EXIT, 1500, INTENT_SAFE_EXIT, SAFETY_STANDARD,
-                    confidence_permille=int(score.total * 100),
+                    confidence_permille=_score_to_confidence_permille(score),
                 ),
                 waypoints=self._safe_exit_waypoints(state),
             ),
@@ -534,7 +540,7 @@ class TacticalPlanner:
         routine = ClassicalRoutine(
             profile_id=100 + self._plan_count,
             objective_id=310,
-            global_confidence_permille=int(score.total * 100),
+            global_confidence_permille=_score_to_confidence_permille(score),
             phases=tuple(p.phase_program for p in phases),
         )
 

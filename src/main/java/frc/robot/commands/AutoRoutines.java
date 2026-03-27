@@ -240,6 +240,7 @@ public final class AutoRoutines {
         final PlannerExecutionMode effectiveMode = effectivePlannerMode();
         final Optional<AutoPlannerClient.RemotePlan> remotePlan = plannerClient.latestPlan();
         final ShadowAgreement shadowAgreement = computeShadowAgreement(remotePlan);
+        autoStatus.syncPlannerState(plannerClient.linkState(), effectiveMode);
 
         SmartDashboard.putString("Auto/Status/Routine", autoStatus.routineId());
         SmartDashboard.putString("Auto/Status/Phase", autoStatus.phaseId());
@@ -258,6 +259,11 @@ public final class AutoRoutines {
         SmartDashboard.putNumber("Auto/Planner/PlanPhaseCount",
                 remotePlan.map(plan -> (double) plan.phaseCount()).orElse(-1.0));
         SmartDashboard.putNumber("Auto/Planner/PlanProfileId",
+                remotePlan
+                        .filter(plan -> plan.profileId() > 0)
+                        .map(plan -> (double) plan.profileId())
+                        .orElse(-1.0));
+        SmartDashboard.putNumber("Auto/Planner/RequestedProfileId",
                 remotePlan.map(plan -> (double) plan.profileId()).orElse(-1.0));
         SmartDashboard.putNumber("Auto/Planner/ObjectiveId",
                 remotePlan.map(plan -> (double) plan.objectiveId()).orElse(-1.0));
