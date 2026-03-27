@@ -10,6 +10,7 @@ import java.util.Optional;
 import java.util.function.BooleanSupplier;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -119,6 +120,7 @@ public class RobotContainer {
         hanger,
         limelight
     );
+    private final Optional<Command> fullCycleCommand = autoRoutines.buildFullCycleCommand();
     private final SubsystemCommands subsystemCommands = new SubsystemCommands(
         swerve,
         intake,
@@ -163,6 +165,8 @@ public class RobotContainer {
         // Driver "intake" controls.
         driverLeftTrigger().whileTrue(intake.intakeCommand());
         driverLeftBumper().onTrue(intake.runOnce(() -> intake.set(Intake.Position.STOWED)));
+        // Driver-assisted autonomous cycle (requires BCNP planner).
+        fullCycleCommand.ifPresent(command -> driverXButton().whileTrue(command));
 
         // D-pad vertical controls hanger stages.
         driverPovUp().onTrue(hanger.positionCommand(Hanger.Position.HANGING));
@@ -203,9 +207,14 @@ public class RobotContainer {
                 );
             });
 
-            // Periodically feed opponent tracks back to the active tactical planner
+            // Keep BCNP pose context fresh for teleop full-cycle and send opponent tracks.
             if (autoRoutines.getPlannerClient() instanceof BcnpTcpPlannerClient bcnp) {
+                final DriverStation.Alliance alliance = DriverStation.getAlliance().orElse(DriverStation.Alliance.Blue);
+                bcnp.updatePoseContext(currentRobotPose, alliance);
                 bcnp.sendOpponentUpdates(limelight.getOpponents());
+            }
+            if (!DriverStation.isAutonomousEnabled()) {
+                autoRoutines.getPlannerClient().periodic();
             }
         })
         .ignoringDisable(true);

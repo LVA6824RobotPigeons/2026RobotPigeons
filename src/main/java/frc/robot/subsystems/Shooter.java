@@ -36,8 +36,7 @@ public class Shooter extends SubsystemBase {
 
     private final TalonFX leftMotor, middleMotor, rightMotor;
     public final List<TalonFX> motors;
-    private final VelocityVoltage velocityRequest = new VelocityVoltage(0).withSlot(0);
-    private final VoltageOut voltageRequest = new VoltageOut(0);
+    private AngularVelocity targetVelocity = RPM.of(0);
 
     // Dashboard-adjustable fallback RPM for manual shooting mode.
     private double dashboardTargetRPM = 4000;
@@ -88,19 +87,20 @@ public class Shooter extends SubsystemBase {
     }    
 
     public void setRPM(double rpm) {
+        targetVelocity = RPM.of(rpm);
         for (final TalonFX motor : motors) {
             motor.setControl(
-                velocityRequest
-                    .withVelocity(RPM.of(rpm))
+                new VelocityVoltage(targetVelocity)
+                    .withSlot(0)
             );
         }
     }
 
     public void setPercentOutput(double percentOutput) {
+        final var output = Volts.of(percentOutput * 12.0);
         for (final TalonFX motor : motors) {
             motor.setControl(
-                voltageRequest
-                    .withOutput(Volts.of(percentOutput * 12.0))
+                new VoltageOut(output)
             );
         }
     }
@@ -128,7 +128,7 @@ public class Shooter extends SubsystemBase {
                 default -> false;
             };
             final double currentRpsMagnitude = Math.abs(motor.getVelocity().refresh().getValue().in(RotationsPerSecond));
-            final double targetRpsMagnitude = Math.abs(velocityRequest.getVelocityMeasure().in(RotationsPerSecond));
+            final double targetRpsMagnitude = Math.abs(targetVelocity.in(RotationsPerSecond));
             final double toleranceRps = kVelocityTolerance.in(RotationsPerSecond);
             return isInVelocityMode && MathUtil.isNear(currentRpsMagnitude, targetRpsMagnitude, toleranceRps);
         });
@@ -151,6 +151,6 @@ public class Shooter extends SubsystemBase {
         initSendable(builder, rightMotor, "Right");
         builder.addStringProperty("Command", () -> getCurrentCommand() != null ? getCurrentCommand().getName() : "null", null);
         builder.addDoubleProperty("Dashboard RPM", () -> dashboardTargetRPM, value -> dashboardTargetRPM = value);
-        builder.addDoubleProperty("Target RPM", () -> velocityRequest.getVelocityMeasure().in(RPM), null);
+        builder.addDoubleProperty("Target RPM", () -> targetVelocity.in(RPM), null);
     }
 }

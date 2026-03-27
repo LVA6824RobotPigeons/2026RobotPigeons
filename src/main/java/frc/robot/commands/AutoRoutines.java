@@ -38,6 +38,8 @@ import frc.robot.commands.auto.AutoSafetyGate.Decision;
 import frc.robot.commands.auto.AutoSafetyGate.ValidationResult;
 import frc.robot.commands.auto.AutoStatus;
 import frc.robot.commands.auto.CommandAutoPhase;
+import frc.robot.commands.auto.FullCycleCommand;
+import frc.robot.commands.auto.FuelDetector;
 import frc.robot.commands.auto.LocalAutoPlannerClient;
 import frc.robot.commands.auto.PlannerExecutionMode;
 import frc.robot.commands.auto.ShiftGameData;
@@ -174,6 +176,32 @@ public final class AutoRoutines {
         return plannerClient;
     }
 
+    public Optional<Command> buildFullCycleCommand() {
+        if (!(plannerClient instanceof BcnpTcpPlannerClient bcnpPlanner)) {
+            return Optional.empty();
+        }
+        final FuelDetector fuelDetector = new FuelDetector(intake);
+        return Optional.of(
+                Commands.sequence(
+                        Commands.runOnce(() -> {
+                            final DriverStation.Alliance alliance = DriverStation.getAlliance()
+                                    .orElse(DriverStation.Alliance.Blue);
+                            bcnpPlanner.setPlanRequestContext(kFastCycleProfile.profileId(), autoContext.robotPose(),
+                                    alliance);
+                        }),
+                        new FullCycleCommand(
+                                swerve,
+                                intake,
+                                shooter,
+                                hood,
+                                feeder,
+                                floor,
+                                fuelDetector,
+                                bcnpPlanner,
+                                autoContext::robotPose))
+                        .withName("FullCycleCommand"));
+    }
+
     public void configure() {
         // Keep the legacy routine available while M0/M1 routines are stabilized.
         autoChooser.addRoutine("LEGACY - Outpost and Depot", this::outpostAndDepotLegacyRoutine);
@@ -187,11 +215,20 @@ public final class AutoRoutines {
         autoChooser.addRoutine(kLeftProfile.chooserName(), () -> phaseDrivenRoutine(kLeftProfile));
         autoChooser.addRoutine(kCenterProfile.chooserName(), () -> phaseDrivenRoutine(kCenterProfile));
         autoChooser.addRoutine(kRightProfile.chooserName(), () -> phaseDrivenRoutine(kRightProfile));
+        if (plannerClient instanceof BcnpTcpPlannerClient) {
+            autoChooser.addRoutine("M4 - BCNP Full Cycle", this::fullCycleRoutine);
+        }
 
         SmartDashboard.putData("Auto Chooser", autoChooser);
         // Publish orchestrator health/status continuously while autonomous is active.
         RobotModeTriggers.autonomous().whileTrue(Commands.run(this::publishStatus));
         RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());
+    }
+
+    private AutoRoutine fullCycleRoutine() {
+        final AutoRoutine routine = autoFactory.newRoutine("M4 - BCNP Full Cycle");
+        routine.active().onTrue(buildFullCycleCommand().orElse(Commands.none()));
+        return routine;
     }
 
     private void publishStatus() {
