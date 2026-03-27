@@ -25,12 +25,12 @@ public final class Constants {
     }
 
     public static class Autonomous {
-        public static final boolean kUseBcnpPlanner = false;
+        public static final boolean kUseBcnpPlanner = true;
         // LOCAL_ONLY: ignore planner, SHADOW: observe planner, ACTIVE: planner health
         // gates execution.
-        public static final PlannerExecutionMode kPlannerExecutionMode = PlannerExecutionMode.SHADOW;
-        public static final String kBcnpHost = "10.57.33.6";
-        public static final int kBcnpPort = 5800;
+        public static final PlannerExecutionMode kPlannerExecutionMode = PlannerExecutionMode.ACTIVE;
+        public static final String kBcnpHost = "10.68.24.6";
+        public static final int kBcnpPort = 5812;
         public static final String kBcnpSchemaDeployPath = "bcnp/messages.json";
         public static final int kBcnpSchemaHashFallback = 0x1A2B3C4D;
         public static final long kBcnpConnectRetryMs = 1000;

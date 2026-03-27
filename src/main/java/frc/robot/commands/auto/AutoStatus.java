@@ -31,6 +31,11 @@ public final class AutoStatus {
         this.phaseId = phaseId;
     }
 
+    public synchronized void syncPlannerState(AutoLinkState linkState, PlannerExecutionMode plannerMode) {
+        this.linkState = linkState;
+        this.plannerMode = plannerMode;
+    }
+
     public synchronized void markFallbackActive(String phaseId) {
         this.phaseId = phaseId;
         this.fallbackActive = true;
