@@ -5,10 +5,6 @@ import com.ctre.phoenix6.CANBus;
 public final class Ports {
 
     // CAN Buses
-<<<<<<< HEAD
-    // CANivore bus name must match Phoenix Tuner configuration.
-=======
->>>>>>> origin/master
     public static final CANBus kCANivoreCANBus = new CANBus("Systems");
 
     // CANdle

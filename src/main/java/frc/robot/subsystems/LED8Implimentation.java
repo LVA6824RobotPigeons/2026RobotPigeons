@@ -1,12 +1,5 @@
 package frc.robot.subsystems;
 
-<<<<<<< HEAD
-/**
- * Centralized hooks for robot-state LED cues.
- *
- * These methods are intentionally disabled because can not done :( so sad..
- */
-=======
 import com.ctre.phoenix6.controls.LarsonAnimation;
 import com.ctre.phoenix6.signals.RGBWColor;
 import frc.robot.Constants;
@@ -16,7 +9,6 @@ import frc.robot.subsystems.led8.Colors.ColorSequence;
 import frc.robot.subsystems.led8.Colors.ColorSolid;
 import frc.robot.subsystems.led8.Colors.ComplexColor;
 
->>>>>>> origin/master
 public class LED8Implimentation {
 
     public static void robotStart() {
