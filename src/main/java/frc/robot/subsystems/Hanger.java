@@ -55,6 +55,10 @@ public class Hanger extends SubsystemBase {
 
     private static final Per<DistanceUnit, AngleUnit> kHangerExtensionPerMotorAngle = Inches.of(6).div(Rotations.of(142));
     private static final Distance kExtensionTolerance = Inches.of(1);
+    private static final double kHomingPercentOutput = -0.05;
+    private static final double kHomingCurrentThresholdAmps = 0.4;
+    private static final double kHomingTimeoutSeconds = 100.0;
+
     private final TalonFX motor;
     private final MotionMagicVoltage motionMagicRequest = new MotionMagicVoltage(0).withSlot(0);
     private final VoltageOut voltageRequest = new VoltageOut(0);
@@ -113,17 +117,26 @@ public class Hanger extends SubsystemBase {
             .andThen(Commands.waitUntil(this::isExtensionWithinTolerance));
     }
 
+    public boolean isHomingCurrentReached() {
+        return motor.getSupplyCurrent().getValue().in(Amps) > kHomingCurrentThresholdAmps;
+    }
+
     public Command homingCommand() {
         return Commands.sequence(
-            // Drive downward into hard stop to establish a repeatable zero extension.
-            runOnce(() -> setPercentOutput(-0.05)),
-            // Current threshold indicates stop contact.
-            Commands.waitUntil(() -> motor.getSupplyCurrent().getValue().in(Amps) > 0.4),
-            runOnce(() -> {
-                motor.setPosition(Position.HOMED.motorAngle());
-                isHomed = true;
-                set(Position.EXTEND_HOPPER);
-            })
+            runOnce(() -> setPercentOutput(kHomingPercentOutput)),
+            Commands.waitUntil(this::isHomingCurrentReached)
+                .withTimeout(kHomingTimeoutSeconds),
+            Commands.either(
+                runOnce(() -> {
+                    motor.setPosition(Position.HOMED.motorAngle());
+                    isHomed = true;
+                    set(Position.EXTEND_HOPPER);
+                }),
+                runOnce(() -> {
+                    setPercentOutput(0);
+                }),
+                this::isHomingCurrentReached
+            )
         )
         .unless(() -> isHomed)
         .withInterruptBehavior(InterruptionBehavior.kCancelIncoming);

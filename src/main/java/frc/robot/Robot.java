@@ -26,8 +26,13 @@ public class Robot extends TimedRobot {
      */
 
     public Robot() {
-        // Initialize startup LED state before subsystems begin scheduling commands.
+        //Main.robot = this;
+        // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
+        // autonomous chooser on the dashboard.
+        //Main.robot = this;
         LED8Implimentation.robotStart();
+        // Initialize startup LED state before subsystems begin scheduling commands.
+  
         // RobotContainer owns subsystem construction, default commands, and trigger bindings.
         m_robotContainer = new RobotContainer();
 
@@ -63,6 +68,7 @@ public class Robot extends TimedRobot {
     }
     @Override
     public void teleopExit() {
+        LED8Implimentation.teleopMode();
         LED8Implimentation.teleopOff();
     }
 
