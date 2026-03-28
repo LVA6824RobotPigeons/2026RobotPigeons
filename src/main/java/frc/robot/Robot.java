@@ -24,15 +24,18 @@ public class Robot extends TimedRobot {
      * This function is run when the robot is first started up and should be used for any
      * initialization code.
      */
+
     public Robot() {
         // Initialize startup LED state before subsystems begin scheduling commands.
         LED8Implimentation.robotStart();
         // RobotContainer owns subsystem construction, default commands, and trigger bindings.
         m_robotContainer = new RobotContainer();
+
         // Expose scheduler for debugging command ownership/live state.
         SmartDashboard.putData(CommandScheduler.getInstance());
         // Slightly lower brownout threshold to reduce brownout trips during brief current spikes.
         RobotController.setBrownoutVoltage(Volts.of(6.1));
+
 
     }
     
@@ -49,11 +52,13 @@ public class Robot extends TimedRobot {
         // commands, running already-scheduled commands, removing finished or interrupted commands,
         // and running subsystem periodic() methods.  This must be called from the robot's periodic
         // block in order for anything in the Command-based framework to work.
+        m_robotContainer.periodic();
         CommandScheduler.getInstance().run();
     }
 
     @Override
     public void teleopInit() {
+        m_robotContainer.resetFuelDetector();
         LED8Implimentation.teleopMode();
     }
     @Override
@@ -63,6 +68,7 @@ public class Robot extends TimedRobot {
 
     @Override
     public void autonomousInit() {
+        m_robotContainer.resetFuelDetector();
         LED8Implimentation.autoMode();
     }
     @Override

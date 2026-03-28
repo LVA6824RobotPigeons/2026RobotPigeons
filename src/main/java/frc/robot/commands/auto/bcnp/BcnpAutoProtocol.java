@@ -41,7 +41,7 @@ public final class BcnpAutoProtocol {
     public static final int WIRE_AUTO_ABORT = 8;
     public static final int WIRE_AUTO_TELEMETRY = 32;
     public static final int WIRE_AUTO_SHOT_HINT = 16;
-    public static final int WIRE_AUTO_WORLD_UPDATE = 20;
+    public static final int WIRE_AUTO_WORLD_UPDATE = 22;
     public static final int WIRE_AUTO_WAYPOINT_DELTA = 20;
     public static final int WIRE_AUTO_OPPONENT_UPDATE = 18;
 
@@ -293,15 +293,15 @@ public final class BcnpAutoProtocol {
             int poseYmm,
             int headingMrad) {
         final ByteBuffer payload = ByteBuffer.allocate(WIRE_AUTO_WORLD_UPDATE).order(ByteOrder.BIG_ENDIAN);
-        payload.put((byte) (fuelHeld & 0xFF));
+        payload.put((byte) clampUnsignedByte(fuelHeld));
         payload.put((byte) (lastShotSuccess ? 1 : 0));
-        payload.putShort((short) phaseSeqCompleted);
-        payload.putShort((short) eventFlags);
-        payload.putShort((short) robotVxMmS);
-        payload.putShort((short) robotVyMmS);
+        payload.putShort((short) clampUnsignedShort(phaseSeqCompleted));
+        payload.putShort((short) clampUnsignedShort(eventFlags));
+        payload.putShort((short) clampSignedShort(robotVxMmS));
+        payload.putShort((short) clampSignedShort(robotVyMmS));
         payload.putInt(poseXmm);
         payload.putInt(poseYmm);
-        payload.putShort((short) headingMrad);
+        payload.putShort((short) clampSignedShort(headingMrad));
         payload.putShort((short) 0); // reserved
         return encodePacket(MSG_AUTO_WORLD_UPDATE, 0, 1, payload.array());
     }
@@ -315,14 +315,26 @@ public final class BcnpAutoProtocol {
             int velocityYmmS,
             int confidencePermille) {
         final ByteBuffer payload = ByteBuffer.allocate(WIRE_AUTO_OPPONENT_UPDATE).order(ByteOrder.BIG_ENDIAN);
-        payload.put((byte) (trackIndex & 0xFF));
-        payload.put((byte) (trackCount & 0xFF));
+        payload.put((byte) clampUnsignedByte(trackIndex));
+        payload.put((byte) clampUnsignedByte(trackCount));
         payload.putInt(poseXmm);
         payload.putInt(poseYmm);
-        payload.putShort((short) velocityXmmS);
-        payload.putShort((short) velocityYmmS);
-        payload.putShort((short) confidencePermille);
+        payload.putShort((short) clampSignedShort(velocityXmmS));
+        payload.putShort((short) clampSignedShort(velocityYmmS));
+        payload.putShort((short) clampUnsignedShort(confidencePermille));
         payload.putShort((short) 0); // reserved
         return encodePacket(MSG_AUTO_OPPONENT_UPDATE, 0, 1, payload.array());
+    }
+
+    private static int clampUnsignedByte(int value) {
+        return Math.max(0, Math.min(0xFF, value));
+    }
+
+    private static int clampUnsignedShort(int value) {
+        return Math.max(0, Math.min(0xFFFF, value));
+    }
+
+    private static int clampSignedShort(int value) {
+        return Math.max(Short.MIN_VALUE, Math.min(Short.MAX_VALUE, value));
     }
 }

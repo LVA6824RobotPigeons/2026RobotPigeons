@@ -25,6 +25,22 @@ import frc.robot.commands.auto.AutoPlannerClient;
 public final class BcnpTcpPlannerClient implements AutoPlannerClient {
     private static final int kReadBufferBytes = 4096;
     private static final int kPendingBufferBytes = 32768;
+    private static final int kFieldLengthMm = 16541;
+    private static final int kFieldWidthMm = 8211;
+    private static final int kMaxPhaseSeq = 16;
+    private static final int kMaxWaypointsPerPhase = 64;
+    private static final int kMaxTotalWaypoints = 512;
+    private static final int kMinWaypointVelocityMmS = 100;
+    private static final int kMaxWaypointVelocityMmS = 5000;
+    private static final int kMinShooterRpm = 1000;
+    private static final int kMaxShooterRpm = 6000;
+    private static final int kMinHoodPermille = 0;
+    private static final int kMaxHoodPermille = 1000;
+    private static final int kMinMrad = -3142;
+    private static final int kMaxMrad = 3142;
+    private static final int kMinConfidencePermille = 0;
+    private static final int kMaxConfidencePermille = 1000;
+    private static final int kMaxDistanceToHubMm = 20000;
 
     private final String host;
     private final int port;
@@ -32,6 +48,7 @@ public final class BcnpTcpPlannerClient implements AutoPlannerClient {
     private final long connectRetryMs;
     private final long heartbeatPeriodMs;
     private final long heartbeatTimeoutMs;
+    private final BcnpValidationMode validationMode;
 
     private SocketChannel channel;
     private AutoLinkState linkState = AutoLinkState.DISCONNECTED;
@@ -64,6 +81,11 @@ public final class BcnpTcpPlannerClient implements AutoPlannerClient {
     private volatile BcnpAutoProtocol.AutoShotHintPayload latestShotHint;
     private long shotHintReceivedAtMs = 0;
     private final Map<Integer, List<BcnpAutoProtocol.AutoWaypointDeltaPayload>> waypointsByPhase = new HashMap<>();
+    private long latestWaypointPlanId = -1;
+
+    private long rejectedPacketCount = 0;
+    private long clampedPacketCount = 0;
+    private long unsupportedPacketCount = 0;
 
     public BcnpTcpPlannerClient(
             String host,
@@ -72,12 +94,24 @@ public final class BcnpTcpPlannerClient implements AutoPlannerClient {
             long connectRetryMs,
             long heartbeatPeriodMs,
             long heartbeatTimeoutMs) {
+        this(host, port, expectedSchemaHash, connectRetryMs, heartbeatPeriodMs, heartbeatTimeoutMs, BcnpValidationMode.STRICT);
+    }
+
+    public BcnpTcpPlannerClient(
+            String host,
+            int port,
+            int expectedSchemaHash,
+            long connectRetryMs,
+            long heartbeatPeriodMs,
+            long heartbeatTimeoutMs,
+            BcnpValidationMode validationMode) {
         this.host = host;
         this.port = port;
         this.expectedSchemaHash = expectedSchemaHash;
         this.connectRetryMs = connectRetryMs;
         this.heartbeatPeriodMs = heartbeatPeriodMs;
         this.heartbeatTimeoutMs = heartbeatTimeoutMs;
+        this.validationMode = validationMode;
     }
 
     @Override
@@ -106,6 +140,22 @@ public final class BcnpTcpPlannerClient implements AutoPlannerClient {
             return -1.0;
         }
         return (System.currentTimeMillis() - lastRxMs) / 1000.0;
+    }
+
+    public BcnpValidationMode validationMode() {
+        return validationMode;
+    }
+
+    public long rejectedPacketCount() {
+        return rejectedPacketCount;
+    }
+
+    public long clampedPacketCount() {
+        return clampedPacketCount;
+    }
+
+    public long unsupportedPacketCount() {
+        return unsupportedPacketCount;
     }
 
     public void setPlanRequestContext(int selectedProfile, Pose2d pose, Alliance alliance) {
@@ -373,7 +423,11 @@ public final class BcnpTcpPlannerClient implements AutoPlannerClient {
                     disconnect();
                     return;
                 }
-                final BcnpAutoProtocol.AutoPlanResponsePayload payload = planPayload.get();
+                final Optional<BcnpAutoProtocol.AutoPlanResponsePayload> sanitized = sanitizePlanResponse(planPayload.get());
+                if (sanitized.isEmpty()) {
+                    return;
+                }
+                final BcnpAutoProtocol.AutoPlanResponsePayload payload = sanitized.get();
                 latestRemotePlan = new RemotePlan(
                         selectedProfile,
                         payload.planId(),
@@ -394,8 +448,11 @@ public final class BcnpTcpPlannerClient implements AutoPlannerClient {
                 final Optional<BcnpAutoProtocol.AutoShotHintPayload> shotHintPayload = BcnpAutoProtocol
                         .decodeAutoShotHintPayload(decoded.payload());
                 if (shotHintPayload.isPresent()) {
-                    latestShotHint = shotHintPayload.get();
-                    shotHintReceivedAtMs = now;
+                    final Optional<BcnpAutoProtocol.AutoShotHintPayload> sanitized = sanitizeShotHint(shotHintPayload.get());
+                    if (sanitized.isPresent()) {
+                        latestShotHint = sanitized.get();
+                        shotHintReceivedAtMs = now;
+                    }
                 }
                 lastRxMs = now;
             }
@@ -403,17 +460,34 @@ public final class BcnpTcpPlannerClient implements AutoPlannerClient {
                 final Optional<BcnpAutoProtocol.AutoWaypointDeltaPayload> waypointPayload = BcnpAutoProtocol
                         .decodeAutoWaypointDeltaPayload(decoded.payload());
                 if (waypointPayload.isPresent()) {
-                    final BcnpAutoProtocol.AutoWaypointDeltaPayload wp = waypointPayload.get();
+                    final Optional<BcnpAutoProtocol.AutoWaypointDeltaPayload> sanitized = sanitizeWaypoint(waypointPayload.get());
+                    if (sanitized.isEmpty()) {
+                        return;
+                    }
+                    final BcnpAutoProtocol.AutoWaypointDeltaPayload wp = sanitized.get();
                     synchronized (waypointsByPhase) {
-                        // If this is the first waypoint for a new plan, clear old data
-                        if (wp.waypointIndex() == 0 && wp.phaseSeq() == 1) {
+                        if (latestWaypointPlanId < 0 || wp.planId() > latestWaypointPlanId) {
                             waypointsByPhase.clear();
+                            latestWaypointPlanId = wp.planId();
+                        } else if (wp.planId() < latestWaypointPlanId) {
+                            reject("WAYPOINT_STALE_PLAN", "Ignoring stale waypoint planId=" + wp.planId());
+                            return;
+                        } else if (waypointsByPhase.values().stream().mapToInt(List::size).sum() >= kMaxTotalWaypoints) {
+                            reject("WAYPOINT_CAP", "Ignoring waypoint because cache cap was reached.");
+                            return;
                         }
                         waypointsByPhase
                                 .computeIfAbsent(wp.phaseSeq(), k -> new ArrayList<>())
                                 .add(wp);
                     }
                 }
+                lastRxMs = now;
+            }
+            case BcnpAutoProtocol.MSG_AUTO_PHASE_COMMAND,
+                 BcnpAutoProtocol.MSG_AUTO_PHASE_ACK,
+                 BcnpAutoProtocol.MSG_AUTO_TELEMETRY -> {
+                unsupportedPacketCount++;
+                setFault("UNSUPPORTED_MESSAGE", "Received unsupported message type " + decoded.messageType() + ".");
                 lastRxMs = now;
             }
             default -> {
@@ -530,6 +604,7 @@ public final class BcnpTcpPlannerClient implements AutoPlannerClient {
         lastRemoteHeartbeatSequence = -1;
         latestRemotePlan = null;
         latestShotHint = null;
+        latestWaypointPlanId = -1;
         synchronized (waypointsByPhase) {
             waypointsByPhase.clear();
         }
@@ -552,5 +627,187 @@ public final class BcnpTcpPlannerClient implements AutoPlannerClient {
 
     private boolean isChannelReadyForIo() {
         return channel != null && channel.isOpen() && channel.isConnected();
+    }
+
+    private Optional<BcnpAutoProtocol.AutoPlanResponsePayload> sanitizePlanResponse(
+            BcnpAutoProtocol.AutoPlanResponsePayload payload) {
+        final boolean[] clamped = new boolean[] { false };
+        final Long planId = clampOrRejectLong("PLAN_ID", payload.planId(), 1, Integer.toUnsignedLong(Integer.MAX_VALUE), clamped);
+        if (planId == null) {
+            return Optional.empty();
+        }
+        final Integer phaseCount = clampOrRejectInt("PLAN_PHASE_COUNT", payload.phaseCount(), 1, kMaxPhaseSeq, clamped);
+        if (phaseCount == null) {
+            return Optional.empty();
+        }
+        final Integer policySource = clampOrRejectInt(
+                "PLAN_POLICY_SOURCE",
+                payload.policySource(),
+                AutoPlannerClient.POLICY_SOURCE_LOCAL,
+                AutoPlannerClient.POLICY_SOURCE_LEARNED_ACTIVE,
+                clamped);
+        if (policySource == null) {
+            return Optional.empty();
+        }
+        final Integer confidence = clampOrRejectInt(
+                "PLAN_CONFIDENCE",
+                payload.globalConfidencePermille(),
+                kMinConfidencePermille,
+                kMaxConfidencePermille,
+                clamped);
+        if (confidence == null) {
+            return Optional.empty();
+        }
+        onClamped(clamped[0], "PLAN_RESPONSE_CLAMP");
+        return Optional.of(new BcnpAutoProtocol.AutoPlanResponsePayload(
+                planId,
+                payload.flags(),
+                phaseCount,
+                payload.planChecksum(),
+                payload.objectiveId(),
+                policySource,
+                confidence));
+    }
+
+    private Optional<BcnpAutoProtocol.AutoShotHintPayload> sanitizeShotHint(
+            BcnpAutoProtocol.AutoShotHintPayload payload) {
+        final boolean[] clamped = new boolean[] { false };
+        final Integer aimOffsetMrad = clampOrRejectInt("SHOT_AIM_OFFSET", payload.aimOffsetMrad(), kMinMrad, kMaxMrad, clamped);
+        if (aimOffsetMrad == null) {
+            return Optional.empty();
+        }
+        final Integer shooterRpm = clampOrRejectInt("SHOT_RPM", payload.shooterRpm(), kMinShooterRpm, kMaxShooterRpm, clamped);
+        if (shooterRpm == null) {
+            return Optional.empty();
+        }
+        final Integer hoodPositionPermille = clampOrRejectInt(
+                "SHOT_HOOD",
+                payload.hoodPositionPermille(),
+                kMinHoodPermille,
+                kMaxHoodPermille,
+                clamped);
+        if (hoodPositionPermille == null) {
+            return Optional.empty();
+        }
+        final Integer fireWindowMrad = clampOrRejectInt("SHOT_FIRE_WINDOW", payload.fireWindowMrad(), 0, kMaxMrad, clamped);
+        if (fireWindowMrad == null) {
+            return Optional.empty();
+        }
+        final Integer confidencePermille = clampOrRejectInt(
+                "SHOT_CONFIDENCE",
+                payload.confidencePermille(),
+                kMinConfidencePermille,
+                kMaxConfidencePermille,
+                clamped);
+        if (confidencePermille == null) {
+            return Optional.empty();
+        }
+        final Integer distanceToHubMm = clampOrRejectInt(
+                "SHOT_DISTANCE",
+                payload.distanceToHubMm(),
+                0,
+                kMaxDistanceToHubMm,
+                clamped);
+        if (distanceToHubMm == null) {
+            return Optional.empty();
+        }
+        onClamped(clamped[0], "SHOT_HINT_CLAMP");
+        return Optional.of(new BcnpAutoProtocol.AutoShotHintPayload(
+                aimOffsetMrad,
+                shooterRpm,
+                hoodPositionPermille,
+                fireWindowMrad,
+                confidencePermille,
+                distanceToHubMm,
+                payload.flags()));
+    }
+
+    private Optional<BcnpAutoProtocol.AutoWaypointDeltaPayload> sanitizeWaypoint(
+            BcnpAutoProtocol.AutoWaypointDeltaPayload payload) {
+        final boolean[] clamped = new boolean[] { false };
+        final Long planId = clampOrRejectLong("WAYPOINT_PLAN_ID", payload.planId(), 1, Integer.toUnsignedLong(Integer.MAX_VALUE), clamped);
+        if (planId == null) {
+            return Optional.empty();
+        }
+        final Integer phaseSeq = clampOrRejectInt("WAYPOINT_PHASE_SEQ", payload.phaseSeq(), 1, kMaxPhaseSeq, clamped);
+        if (phaseSeq == null) {
+            return Optional.empty();
+        }
+        final Integer waypointCount = clampOrRejectInt("WAYPOINT_COUNT", payload.waypointCount(), 1, kMaxWaypointsPerPhase, clamped);
+        if (waypointCount == null) {
+            return Optional.empty();
+        }
+        final Integer waypointIndex = clampOrRejectInt("WAYPOINT_INDEX", payload.waypointIndex(), 0, waypointCount - 1, clamped);
+        if (waypointIndex == null) {
+            return Optional.empty();
+        }
+        final Integer xMm = clampOrRejectInt("WAYPOINT_X", payload.xMm(), 0, kFieldLengthMm, clamped);
+        if (xMm == null) {
+            return Optional.empty();
+        }
+        final Integer yMm = clampOrRejectInt("WAYPOINT_Y", payload.yMm(), 0, kFieldWidthMm, clamped);
+        if (yMm == null) {
+            return Optional.empty();
+        }
+        final Integer headingMrad = clampOrRejectInt("WAYPOINT_HEADING", payload.headingMrad(), kMinMrad, kMaxMrad, clamped);
+        if (headingMrad == null) {
+            return Optional.empty();
+        }
+        final Integer maxVelocityMmS = clampOrRejectInt(
+                "WAYPOINT_MAX_VELOCITY",
+                payload.maxVelocityMmS(),
+                kMinWaypointVelocityMmS,
+                kMaxWaypointVelocityMmS,
+                clamped);
+        if (maxVelocityMmS == null) {
+            return Optional.empty();
+        }
+        onClamped(clamped[0], "WAYPOINT_CLAMP");
+        return Optional.of(new BcnpAutoProtocol.AutoWaypointDeltaPayload(
+                planId,
+                phaseSeq,
+                waypointIndex,
+                waypointCount,
+                xMm,
+                yMm,
+                headingMrad,
+                maxVelocityMmS));
+    }
+
+    private Integer clampOrRejectInt(String code, int value, int min, int max, boolean[] clamped) {
+        if (value < min || value > max) {
+            if (validationMode == BcnpValidationMode.STRICT) {
+                reject(code, "Value " + value + " out of range [" + min + "," + max + "].");
+                return null;
+            }
+            clamped[0] = true;
+            return Math.max(min, Math.min(max, value));
+        }
+        return value;
+    }
+
+    private Long clampOrRejectLong(String code, long value, long min, long max, boolean[] clamped) {
+        if (value < min || value > max) {
+            if (validationMode == BcnpValidationMode.STRICT) {
+                reject(code, "Value " + value + " out of range [" + min + "," + max + "].");
+                return null;
+            }
+            clamped[0] = true;
+            return Math.max(min, Math.min(max, value));
+        }
+        return value;
+    }
+
+    private void reject(String code, String detail) {
+        rejectedPacketCount++;
+        setFault(code, detail);
+    }
+
+    private void onClamped(boolean clamped, String code) {
+        if (!clamped) {
+            return;
+        }
+        clampedPacketCount++;
+        setFault(code, "Inbound planner payload was clamped to safe bounds.");
     }
 }

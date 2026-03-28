@@ -65,42 +65,42 @@ public final class AutoRoutines {
     private static final double kAdaptiveCollectionMaxElapsedSeconds = 6.5;
     private static final double kAdaptiveTrajectoryTransitMaxElapsedSeconds = 9.5;
     private static final LocalAutoProfile kLeftProfile = new LocalAutoProfile(
-            "M1 - L Max Fuel",
+            "L Max Fuel",
             1,
             2600,
             0.32,
             101,
             LocalAutoStyle.MAX_FUEL);
     private static final LocalAutoProfile kCenterProfile = new LocalAutoProfile(
-            "M1 - C Max Fuel",
+            "C Max Fuel",
             2,
             2550,
             0.31,
             102,
             LocalAutoStyle.FAST_CYCLE_SCORE);
     private static final LocalAutoProfile kRightProfile = new LocalAutoProfile(
-            "M1 - R Fast Score Exit",
+            "R Fast Score Exit",
             3,
             2450,
             0.30,
             103,
             LocalAutoStyle.SAFE_SCORE_EXIT);
     private static final LocalAutoProfile kSafeScoreProfile = new LocalAutoProfile(
-            "M2 - Safe Score Exit",
+            "Safe Score Exit",
             11,
             2500,
             0.30,
             201,
             LocalAutoStyle.SAFE_SCORE_EXIT);
     private static final LocalAutoProfile kFastCycleProfile = new LocalAutoProfile(
-            "M2 - Fast Cycle Score",
+            "Fast Cycle Score",
             12,
             2620,
             0.31,
             202,
             LocalAutoStyle.FAST_CYCLE_SCORE);
     private static final LocalAutoProfile kConservativeMobilityProfile = new LocalAutoProfile(
-            "M2 - Conservative Mobility",
+            "Conservative Mobility",
             13,
             0,
             0,
@@ -111,6 +111,7 @@ public final class AutoRoutines {
     private final Intake intake;
     private final Floor floor;
     private final Feeder feeder;
+    private final FuelDetector fuelDetector;
     private final Shooter shooter;
     private final Hood hood;
     private final Hanger hanger;
@@ -133,6 +134,7 @@ public final class AutoRoutines {
             Intake intake,
             Floor floor,
             Feeder feeder,
+            FuelDetector fuelDetector,
             Shooter shooter,
             Hood hood,
             Hanger hanger,
@@ -141,6 +143,7 @@ public final class AutoRoutines {
         this.intake = intake;
         this.floor = floor;
         this.feeder = feeder;
+        this.fuelDetector = fuelDetector;
         this.shooter = shooter;
         this.hood = hood;
         this.hanger = hanger;
@@ -163,7 +166,8 @@ public final class AutoRoutines {
                         schemaHash,
                         Constants.Autonomous.kBcnpConnectRetryMs,
                         Constants.Autonomous.kBcnpHeartbeatPeriodMs,
-                        Constants.Autonomous.kBcnpHeartbeatTimeoutMs)
+                        Constants.Autonomous.kBcnpHeartbeatTimeoutMs,
+                        Constants.Autonomous.kBcnpValidationMode)
                 : new LocalAutoPlannerClient();
         this.autoContext = new AutoContext(
                 () -> swerve.getState().Pose,
@@ -180,7 +184,6 @@ public final class AutoRoutines {
         if (!(plannerClient instanceof BcnpTcpPlannerClient bcnpPlanner)) {
             return Optional.empty();
         }
-        final FuelDetector fuelDetector = new FuelDetector(intake);
         return Optional.of(
                 Commands.sequence(
                         Commands.runOnce(() -> {
@@ -283,6 +286,12 @@ public final class AutoRoutines {
         SmartDashboard.putString(
                 "Auto/GameData/Shift1InactiveHub",
                 ShiftGameData.parse(DriverStation.getGameSpecificMessage()).name());
+        if (plannerClient instanceof BcnpTcpPlannerClient bcnpPlanner) {
+            SmartDashboard.putString("Auto/Planner/ValidationMode", bcnpPlanner.validationMode().name());
+            SmartDashboard.putNumber("Auto/Planner/RejectedPackets", bcnpPlanner.rejectedPacketCount());
+            SmartDashboard.putNumber("Auto/Planner/ClampedPackets", bcnpPlanner.clampedPacketCount());
+            SmartDashboard.putNumber("Auto/Planner/UnsupportedMsgPackets", bcnpPlanner.unsupportedPacketCount());
+        }
     }
 
     private AutoRoutine dynamicClassicalRoutine() {

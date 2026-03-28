@@ -4,6 +4,7 @@ import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import com.ctre.phoenix6.hardware.TalonFX;
 import edu.wpi.first.hal.HAL;
@@ -61,12 +62,7 @@ class ShooterManipulatorTest {
     @Test
     void setRPM_putsMotorsInVelocityControlMode() {
         shooter.setRPM(3000);
-        waitForSignals();
-
-        for (TalonFX motor : motors) {
-            final String controlMode = motor.getControlMode(false).refresh().getValue().toString();
-            assertTrue(controlMode.contains("Velocity"));
-        }
+        waitForAllMotorsInMode("Velocity", 250);
     }
 
     @Test
@@ -135,5 +131,32 @@ class ShooterManipulatorTest {
     private static void waitForSignals() {
         // One robot loop for sim values/control requests to propagate.
         Timer.delay(0.02);
+    }
+
+    private void waitForAllMotorsInMode(String expectedSubstring, int timeoutMs) {
+        final long deadlineMs = System.currentTimeMillis() + timeoutMs;
+        while (System.currentTimeMillis() < deadlineMs) {
+            boolean allMatch = true;
+            for (TalonFX motor : motors) {
+                final String controlMode = motor.getControlMode(false).refresh().getValue().toString();
+                if (!controlMode.contains(expectedSubstring)) {
+                    allMatch = false;
+                    break;
+                }
+            }
+            if (allMatch) {
+                return;
+            }
+            waitForSignals();
+        }
+
+        final StringBuilder modes = new StringBuilder();
+        for (TalonFX motor : motors) {
+            if (!modes.isEmpty()) {
+                modes.append(", ");
+            }
+            modes.append(motor.getControlMode(false).refresh().getValue());
+        }
+        fail("Timed out waiting for control mode containing '" + expectedSubstring + "'. Modes: " + modes);
     }
 }

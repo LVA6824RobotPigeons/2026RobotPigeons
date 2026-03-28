@@ -88,6 +88,14 @@ public class Feeder extends SubsystemBase {
         return startEnd(() -> set(Speed.FEED), () -> setPercentOutput(0));
     }
 
+    public double getRpm() {
+        return motor.getVelocity().getValue().in(RPM);
+    }
+
+    public double getSupplyCurrentAmps() {
+        return motor.getSupplyCurrent().getValue().in(Amps);
+    }
+
     @Override
     public void initSendable(SendableBuilder builder) {
         builder.addStringProperty("Command", () -> getCurrentCommand() != null ? getCurrentCommand().getName() : "null", null);

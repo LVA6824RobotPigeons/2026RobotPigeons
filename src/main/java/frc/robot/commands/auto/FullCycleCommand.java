@@ -99,7 +99,6 @@ public class FullCycleCommand extends Command {
     public void initialize() {
         state = CycleState.SEEKING;
         stateStartTime = Timer.getFPGATimestamp();
-        fuelDetector.reset();
 
         // Deploy intake immediately
         intake.set(Intake.Position.INTAKE);
@@ -116,8 +115,7 @@ public class FullCycleCommand extends Command {
     public void execute() {
         SmartDashboard.putString("FullCycle/State", state.name());
 
-        // Always update fuel detector
-        final boolean justAcquired = fuelDetector.update();
+        final boolean justAcquired = fuelDetector.consumeAcquisitionEvent();
 
         switch (state) {
             case SEEKING -> executeSeeking(justAcquired);
