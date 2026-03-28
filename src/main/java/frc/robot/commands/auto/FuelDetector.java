@@ -5,6 +5,7 @@ import java.util.function.DoubleSupplier;
 import edu.wpi.first.wpilibj.Timer;
 import frc.robot.subsystems.Feeder;
 import frc.robot.subsystems.Intake;
+import frc.robot.subsystems.Shooter;
 
 // Detects fuel acquisition by monitoring intake roller motor current.
 public class FuelDetector {
@@ -21,15 +22,20 @@ public class FuelDetector {
     private static final double kZone2BallsDeltaAmps = 5.0;
     private static final double kZone3BallsDeltaAmps = 8.5;
 
-    private static final double kFeederActiveRpm = 1200.0;
-    private static final double kFeederBaselineAlpha = 0.08;
-    private static final double kFeederEntryDeltaAmps = 3.0;
-    private static final double kFeederExitDeltaAmps = 1.2;
-    private static final double kFeederDebounceSeconds = 0.03;
-    private static final double kFeederRearmSeconds = 0.12;
+    private static final double kShooterActiveTargetRpm = 1800.0;
+    private static final double kShooterActiveMeasuredRpm = 1200.0;
+    private static final double kShooterStartupIgnoreSeconds = 0.30;
+    private static final double kShooterBaselineAlpha = 0.08;
+    private static final double kShooterEntryCurrentDeltaAmps = 5.0;
+    private static final double kShooterEntryRpmDrop = 220.0;
+    private static final double kShooterExitCurrentDeltaAmps = 1.8;
+    private static final double kShooterExitRpmDrop = 80.0;
+    private static final double kShooterDebounceSeconds = 0.03;
+    private static final double kShooterRearmSeconds = 0.12;
 
     private final Intake intake;
     private final Feeder feeder;
+    private final Shooter shooter;
     private final DoubleSupplier timeSecondsSupplier;
 
     private int fuelCount = 0;
@@ -46,20 +52,23 @@ public class FuelDetector {
     private double intakeAboveThresholdSince = -1;
     private double intakeIgnoreUntilSeconds = 0.0;
 
-    private boolean feederBaselineInitialized = false;
-    private double feederBaselineAmps = 0.0;
-    private boolean feederEventActive = false;
-    private double feederAboveThresholdSince = -1;
-    private double feederBelowThresholdSince = -1;
-    private double feederIgnoreUntilSeconds = 0.0;
+    private boolean shooterBaselineInitialized = false;
+    private double shooterBaselineCurrentAmps = 0.0;
+    private double shooterBaselineRpm = 0.0;
+    private boolean shooterEventActive = false;
+    private boolean shooterLastActive = false;
+    private double shooterAboveThresholdSince = -1;
+    private double shooterBelowThresholdSince = -1;
+    private double shooterIgnoreUntilSeconds = 0.0;
 
-    public FuelDetector(Intake intake, Feeder feeder) {
-        this(intake, feeder, Timer::getFPGATimestamp);
+    public FuelDetector(Intake intake, Feeder feeder, Shooter shooter) {
+        this(intake, feeder, shooter, Timer::getFPGATimestamp);
     }
 
-    FuelDetector(Intake intake, Feeder feeder, DoubleSupplier timeSecondsSupplier) {
+    FuelDetector(Intake intake, Feeder feeder, Shooter shooter, DoubleSupplier timeSecondsSupplier) {
         this.intake = intake;
         this.feeder = feeder;
+        this.shooter = shooter;
         this.timeSecondsSupplier = timeSecondsSupplier;
     }
 
@@ -67,7 +76,7 @@ public class FuelDetector {
     public boolean update() {
         final double now = timeSecondsSupplier.getAsDouble();
         final boolean acquiredFuel = updateIntakeDetection(now);
-        updateFeederEjectionDetection(now);
+        updateShooterEjectionDetection(now);
         if (acquiredFuel) {
             acquisitionEventLatched = true;
         }
@@ -106,12 +115,14 @@ public class FuelDetector {
         intakeAboveThresholdSince = -1;
         intakeIgnoreUntilSeconds = 0.0;
 
-        feederBaselineInitialized = false;
-        feederBaselineAmps = 0.0;
-        feederEventActive = false;
-        feederAboveThresholdSince = -1;
-        feederBelowThresholdSince = -1;
-        feederIgnoreUntilSeconds = 0.0;
+        shooterBaselineInitialized = false;
+        shooterBaselineCurrentAmps = 0.0;
+        shooterBaselineRpm = 0.0;
+        shooterEventActive = false;
+        shooterLastActive = false;
+        shooterAboveThresholdSince = -1;
+        shooterBelowThresholdSince = -1;
+        shooterIgnoreUntilSeconds = 0.0;
     }
 
     private boolean updateIntakeDetection(double nowSeconds) {
@@ -196,63 +207,78 @@ public class FuelDetector {
         return false;
     }
 
-    private void updateFeederEjectionDetection(double nowSeconds) {
-        final double feederRpm = feeder.getRpm();
-        final double feederCurrentAmps = feeder.getSupplyCurrentAmps();
-        final boolean feederActive = feederRpm >= kFeederActiveRpm;
+    private void updateShooterEjectionDetection(double nowSeconds) {
+        final double shooterTargetRpm = shooter.getTargetRpm();
+        final double shooterRpm = shooter.getAverageRpm();
+        final double shooterCurrentAmps = shooter.getAverageSupplyCurrentAmps();
+        final boolean shooterActive = shooterTargetRpm >= kShooterActiveTargetRpm
+                && shooterRpm >= kShooterActiveMeasuredRpm;
 
-        if (!feederBaselineInitialized) {
-            feederBaselineInitialized = true;
-            feederBaselineAmps = feederCurrentAmps;
+        if (!shooterBaselineInitialized) {
+            shooterBaselineInitialized = true;
+            shooterBaselineCurrentAmps = shooterCurrentAmps;
+            shooterBaselineRpm = shooterRpm;
             return;
         }
 
-        if (!feederActive) {
-            feederEventActive = false;
-            feederAboveThresholdSince = -1;
-            feederBelowThresholdSince = -1;
-            feederBaselineAmps = feederCurrentAmps;
+        if (shooterActive && !shooterLastActive) {
+            shooterIgnoreUntilSeconds = nowSeconds + kShooterStartupIgnoreSeconds;
+        }
+        shooterLastActive = shooterActive;
+
+        if (!shooterActive) {
+            shooterEventActive = false;
+            shooterAboveThresholdSince = -1;
+            shooterBelowThresholdSince = -1;
+            shooterBaselineCurrentAmps = shooterCurrentAmps;
+            shooterBaselineRpm = shooterRpm;
             return;
         }
 
-        if (nowSeconds < feederIgnoreUntilSeconds) {
-            feederBaselineAmps = feederBaselineAmps + (0.20 * (feederCurrentAmps - feederBaselineAmps));
+        if (nowSeconds < shooterIgnoreUntilSeconds) {
+            shooterBaselineCurrentAmps = shooterBaselineCurrentAmps + (0.20 * (shooterCurrentAmps - shooterBaselineCurrentAmps));
+            shooterBaselineRpm = shooterBaselineRpm + (0.20 * (shooterRpm - shooterBaselineRpm));
             return;
         }
 
-        if (!feederEventActive) {
-            feederBaselineAmps = feederBaselineAmps + (kFeederBaselineAlpha * (feederCurrentAmps - feederBaselineAmps));
-            final double deltaAmps = feederCurrentAmps - feederBaselineAmps;
-            if (deltaAmps >= kFeederEntryDeltaAmps) {
-                if (feederAboveThresholdSince < 0) {
-                    feederAboveThresholdSince = nowSeconds;
+        if (!shooterEventActive) {
+            shooterBaselineCurrentAmps = shooterBaselineCurrentAmps
+                    + (kShooterBaselineAlpha * (shooterCurrentAmps - shooterBaselineCurrentAmps));
+            shooterBaselineRpm = shooterBaselineRpm + (kShooterBaselineAlpha * (shooterRpm - shooterBaselineRpm));
+
+            final double currentDeltaAmps = shooterCurrentAmps - shooterBaselineCurrentAmps;
+            final double rpmDrop = shooterBaselineRpm - shooterRpm;
+            if (currentDeltaAmps >= kShooterEntryCurrentDeltaAmps || rpmDrop >= kShooterEntryRpmDrop) {
+                if (shooterAboveThresholdSince < 0) {
+                    shooterAboveThresholdSince = nowSeconds;
                 }
-                if (nowSeconds - feederAboveThresholdSince >= kFeederDebounceSeconds) {
-                    feederEventActive = true;
-                    feederBelowThresholdSince = -1;
+                if (nowSeconds - shooterAboveThresholdSince >= kShooterDebounceSeconds) {
+                    shooterEventActive = true;
+                    shooterBelowThresholdSince = -1;
                 }
             } else {
-                feederAboveThresholdSince = -1;
+                shooterAboveThresholdSince = -1;
             }
             return;
         }
 
-        final double deltaAmps = feederCurrentAmps - feederBaselineAmps;
-        if (deltaAmps <= kFeederExitDeltaAmps) {
-            if (feederBelowThresholdSince < 0) {
-                feederBelowThresholdSince = nowSeconds;
+        final double currentDeltaAmps = shooterCurrentAmps - shooterBaselineCurrentAmps;
+        final double rpmDrop = shooterBaselineRpm - shooterRpm;
+        if (currentDeltaAmps <= kShooterExitCurrentDeltaAmps && rpmDrop <= kShooterExitRpmDrop) {
+            if (shooterBelowThresholdSince < 0) {
+                shooterBelowThresholdSince = nowSeconds;
             }
-            if (nowSeconds - feederBelowThresholdSince >= kFeederDebounceSeconds) {
-                feederEventActive = false;
-                feederAboveThresholdSince = -1;
-                feederBelowThresholdSince = -1;
-                feederIgnoreUntilSeconds = nowSeconds + kFeederRearmSeconds;
+            if (nowSeconds - shooterBelowThresholdSince >= kShooterDebounceSeconds) {
+                shooterEventActive = false;
+                shooterAboveThresholdSince = -1;
+                shooterBelowThresholdSince = -1;
+                shooterIgnoreUntilSeconds = nowSeconds + kShooterRearmSeconds;
                 if (fuelCount > 0) {
                     fuelCount--;
                 }
             }
         } else {
-            feederBelowThresholdSince = -1;
+            shooterBelowThresholdSince = -1;
         }
     }
 

@@ -119,6 +119,24 @@ public class Shooter extends SubsystemBase {
         return defer(() -> spinUpCommand(dashboardTargetRPM)); 
     }
 
+    public double getTargetRpm() {
+        return targetVelocity.in(RPM);
+    }
+
+    public double getAverageRpm() {
+        return motors.stream()
+            .mapToDouble(motor -> Math.abs(motor.getVelocity().refresh().getValue().in(RPM)))
+            .average()
+            .orElse(0.0);
+    }
+
+    public double getAverageSupplyCurrentAmps() {
+        return motors.stream()
+            .mapToDouble(motor -> motor.getSupplyCurrent().refresh().getValue().in(Amps))
+            .average()
+            .orElse(0.0);
+    }
+
     public boolean isVelocityWithinTolerance() {
         // Valid readiness requires both: velocity mode is active and all motors are near target.
         return motors.stream().allMatch(motor -> {

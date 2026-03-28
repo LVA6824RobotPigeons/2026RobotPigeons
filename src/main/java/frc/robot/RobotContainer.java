@@ -47,8 +47,8 @@ public class RobotContainer {
     private final Intake intake = new Intake();
     private final Floor floor = new Floor();
     private final Feeder feeder = new Feeder();
-    private final FuelDetector fuelDetector = new FuelDetector(intake, feeder);
     private final Shooter shooter = new Shooter();
+    private final FuelDetector fuelDetector = new FuelDetector(intake, feeder, shooter);
     private final Hood hood = new Hood();
     private final Hanger hanger = new Hanger();
     private final Limelight limelight = new Limelight("limelight");
