@@ -32,7 +32,7 @@ public class ComplexColor {
     }
 
     public void tick(int refreshRate, LED8 led8) {
-
+        // Delegate per-frame updates to whichever concrete color mode was configured.
         switch(type) {
             case Solid:
                 colorSolid.tick(refreshRate,led8); break;

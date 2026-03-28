@@ -32,6 +32,16 @@ public class Hood extends SubsystemBase {
     private double targetPosition = 0.5;
     private Time lastUpdateTime = Seconds.of(0);
 
+    // Preset hood positions cycled by D-pad in teleop.
+    private int stage = 0;
+
+    private static final double[] STAGES = {0.0,0.2,0.4,0.6,0.8,1};
+
+    public void cycleStage() {
+        stage = (stage + 1) % STAGES.length;
+        setPosition(STAGES[stage]);
+    }
+
     public Hood() {
         leftServo = new Servo(Ports.kHoodLeftServo);
         rightServo = new Servo(Ports.kHoodRightServo);
@@ -41,7 +51,7 @@ public class Hood extends SubsystemBase {
         SmartDashboard.putData(this);
     }
 
-    /** Expects a position between 0.0 and 1.0 */
+    /** Expects a pos between 0.0 and 1.0(normalized) */
     public void setPosition(double position) {
         final double clampedPosition = MathUtil.clamp(position, kMinPosition, kMaxPosition);
         leftServo.set(clampedPosition);
@@ -49,7 +59,7 @@ public class Hood extends SubsystemBase {
         targetPosition = clampedPosition;
     }
 
-    /** Expects a position between 0.0 and 1.0 */
+    /** Expects a pos between 0.0 and 1.0 (normalized) */
     public Command positionCommand(double position) {
         return runOnce(() -> setPosition(position))
             .andThen(Commands.waitUntil(this::isPositionWithinTolerance));
@@ -60,6 +70,7 @@ public class Hood extends SubsystemBase {
     }
 
     private void updateCurrentPosition() {
+        // Servo API doesn;t expose positional feedback, so maintain a physics-lite estimate for command completion checks and dashboard.
         final Time currentTime = Seconds.of(Timer.getFPGATimestamp());
         final Time elapsedTime = currentTime.minus(lastUpdateTime);
         lastUpdateTime = currentTime;

@@ -6,11 +6,8 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.Volts;
 
-import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.RGBWColor;
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.TimedRobot;
-import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.subsystems.LED8Implimentation;
@@ -27,15 +24,23 @@ public class Robot extends TimedRobot {
      * This function is run when the robot is first started up and should be used for any
      * initialization code.
      */
+
     public Robot() {
         //Main.robot = this;
         // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
         // autonomous chooser on the dashboard.
         //Main.robot = this;
         LED8Implimentation.robotStart();
+        // Initialize startup LED state before subsystems begin scheduling commands.
+  
+        // RobotContainer owns subsystem construction, default commands, and trigger bindings.
         m_robotContainer = new RobotContainer();
+
+        // Expose scheduler for debugging command ownership/live state.
         SmartDashboard.putData(CommandScheduler.getInstance());
+        // Slightly lower brownout threshold to reduce brownout trips during brief current spikes.
         RobotController.setBrownoutVoltage(Volts.of(6.1));
+
 
     }
     
@@ -52,20 +57,24 @@ public class Robot extends TimedRobot {
         // commands, running already-scheduled commands, removing finished or interrupted commands,
         // and running subsystem periodic() methods.  This must be called from the robot's periodic
         // block in order for anything in the Command-based framework to work.
+        m_robotContainer.periodic();
         CommandScheduler.getInstance().run();
     }
 
     @Override
     public void teleopInit() {
+        m_robotContainer.resetFuelDetector();
         LED8Implimentation.teleopMode();
     }
     @Override
     public void teleopExit() {
         LED8Implimentation.teleopMode();
+        LED8Implimentation.teleopOff();
     }
 
     @Override
     public void autonomousInit() {
+        m_robotContainer.resetFuelDetector();
         LED8Implimentation.autoMode();
     }
     @Override

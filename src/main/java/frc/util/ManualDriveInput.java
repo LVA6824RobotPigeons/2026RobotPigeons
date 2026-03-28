@@ -1,8 +1,10 @@
 package frc.util;
 
 public class ManualDriveInput {
+    // Field-centric translation command in normalized [-1, 1] joystick units.
     public final double forward;
     public final double left;
+    // Normalized yaw-rate command in [-1, 1].
     public final double rotation;
 
     public ManualDriveInput(double forward, double left, double rotation) {
