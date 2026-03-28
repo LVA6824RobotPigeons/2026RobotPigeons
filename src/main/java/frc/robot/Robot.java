@@ -68,7 +68,6 @@ public class Robot extends TimedRobot {
     }
     @Override
     public void teleopExit() {
-        LED8Implimentation.teleopMode();
         LED8Implimentation.teleopOff();
     }
 
