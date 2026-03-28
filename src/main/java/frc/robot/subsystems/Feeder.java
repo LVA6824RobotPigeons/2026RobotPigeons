@@ -25,8 +25,7 @@ import frc.robot.Ports;
 
 public class Feeder extends SubsystemBase {
     public enum Speed {
-        FEED(5000),
-        STOP(0);
+        FEED(5000);
 
         private final double rpm;
 
@@ -37,11 +36,10 @@ public class Feeder extends SubsystemBase {
         public AngularVelocity angularVelocity() {
             return RPM.of(rpm);
         }
-    }
+    }    
 
     private final TalonFX motor;
-    private final VelocityVoltage velocityRequest = new VelocityVoltage(0).withSlot(0);
-    private final VoltageOut voltageRequest = new VoltageOut(0);
+    private AngularVelocity targetVelocity = RPM.of(0);
 
     public Feeder() {
         motor = new TalonFX(Ports.kFeeder, Ports.kCANivoreCANBus);
@@ -72,35 +70,37 @@ public class Feeder extends SubsystemBase {
     }
 
     public void set(Speed speed) {
+        targetVelocity = speed.angularVelocity();
         motor.setControl(
-            velocityRequest
-                .withVelocity(speed.angularVelocity())
+            new VelocityVoltage(targetVelocity)
+                .withSlot(0)
         );
     }
 
     public void setPercentOutput(double percentOutput) {
         motor.setControl(
-            voltageRequest
-                .withOutput(Volts.of(percentOutput * 12.0))
+            new VoltageOut(Volts.of(percentOutput * 12.0))
         );
     }
 
     public Command feedCommand() {
-        return startEnd(
-                () -> {
-                    LED8Implimentation.feedOn();
-                    set(Speed.FEED);
-                }, () -> {
-                    LED8Implimentation.feedOff();
-                    set(Speed.STOP);
-                }
-                );
+        // Velocity mode while active, then hard stop on command end.
+        return startEnd(() -> set(Speed.FEED), () -> setPercentOutput(0));
+    }
+
+    public double getRpm() {
+        return motor.getVelocity().getValue().in(RPM);
+    }
+
+    public double getSupplyCurrentAmps() {
+        return motor.getSupplyCurrent().getValue().in(Amps);
     }
 
     @Override
     public void initSendable(SendableBuilder builder) {
         builder.addStringProperty("Command", () -> getCurrentCommand() != null ? getCurrentCommand().getName() : "null", null);
         builder.addDoubleProperty("RPM", () -> motor.getVelocity().getValue().in(RPM), null);
+        builder.addDoubleProperty("Target RPM", () -> targetVelocity.in(RPM), null);
         builder.addDoubleProperty("Stator Current", () -> motor.getStatorCurrent().getValue().in(Amps), null);
         builder.addDoubleProperty("Supply Current", () -> motor.getSupplyCurrent().getValue().in(Amps), null);
     }
