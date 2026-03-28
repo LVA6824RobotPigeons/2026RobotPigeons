@@ -117,6 +117,10 @@ public class Hanger extends SubsystemBase {
             .andThen(Commands.waitUntil(this::isExtensionWithinTolerance));
     }
 
+    public boolean isHomingCurrentReached() {
+        return motor.getSupplyCurrent().getValue().in(Amps) > kHomingCurrentThresholdAmps;
+    }
+
     public Command homingCommand() {
         return Commands.sequence(
             runOnce(() -> setPercentOutput(kHomingPercentOutput)),
