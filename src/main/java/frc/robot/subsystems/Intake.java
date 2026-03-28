@@ -177,7 +177,14 @@ public class Intake extends SubsystemBase {
                 set(Position.INTAKE);
                 set(Speed.INTAKE);
             },
+<<<<<<< HEAD
             () -> set(Speed.STOP)
+=======
+            () -> {
+                LED8Implimentation.intakeOff();
+                set(Speed.STOP);
+            }
+>>>>>>> origin/master
         );
     }
 
