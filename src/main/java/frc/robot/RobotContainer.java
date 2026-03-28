@@ -10,7 +10,8 @@ import java.util.Optional;
 import java.util.function.BooleanSupplier;
 
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -20,8 +21,10 @@ import frc.robot.Constants.Driving;
 import frc.robot.commands.AutoRoutines;
 import frc.robot.commands.ManualDriveCommand;
 import frc.robot.commands.SubsystemCommands;
+import frc.robot.commands.auto.FuelDetector;
 import frc.robot.subsystems.Feeder;
 import frc.robot.subsystems.Floor;
+import frc.robot.commands.auto.bcnp.BcnpTcpPlannerClient;
 import frc.robot.subsystems.Hanger;
 import frc.robot.subsystems.Hood;
 import frc.robot.subsystems.Intake;
@@ -37,6 +40,7 @@ import frc.util.SwerveTelemetry;
  * subsystems, commands, and trigger mappings) should be declared here.
  */
 public class RobotContainer {
+    // Treat trigger pulls beyond this value as an intentional button press.
     private static final double kTriggerThreshold = 0.5;
 
     private final Swerve swerve = new Swerve();
@@ -44,6 +48,7 @@ public class RobotContainer {
     private final Floor floor = new Floor();
     private final Feeder feeder = new Feeder();
     private final Shooter shooter = new Shooter();
+    private final FuelDetector fuelDetector = new FuelDetector(intake, feeder, shooter);
     private final Hood hood = new Hood();
     private final Hanger hanger = new Hanger();
     private final Limelight limelight = new Limelight("limelight");
@@ -98,6 +103,14 @@ public class RobotContainer {
         return driverTrigger(() -> driver.getHID().getPOV() == 180);
     }
 
+    private Trigger driverPovRight() {
+        return driverTrigger(() -> driver.getHID().getPOV() == 90);
+    }
+
+    private Trigger driverPovLeft() {
+        return driverTrigger(() -> driver.getHID().getPOV() == 270);
+    }
+
     private final SwerveTelemetry swerveTelemetry = new SwerveTelemetry(Driving.kMaxSpeed.in(MetersPerSecond));
 
     private final AutoRoutines autoRoutines = new AutoRoutines(
@@ -105,11 +118,13 @@ public class RobotContainer {
         intake,
         floor,
         feeder,
+        fuelDetector,
         shooter,
         hood,
         hanger,
         limelight
     );
+    private final Optional<Command> fullCycleCommand = autoRoutines.buildFullCycleCommand();
     private final SubsystemCommands subsystemCommands = new SubsystemCommands(
         swerve,
         intake,
@@ -128,6 +143,20 @@ public class RobotContainer {
         autoRoutines.configure();
         swerve.registerTelemetry(swerveTelemetry::telemeterize);
     }
+
+    public FuelDetector fuelDetector() {
+        return fuelDetector;
+    }
+
+    public void periodic() {
+        fuelDetector.update();
+        SmartDashboard.putNumber("balls", fuelDetector.getFuelCount());
+        SmartDashboard.putBoolean("ball", fuelDetector.hasFuelRaw());
+    }
+
+    public void resetFuelDetector() {
+        fuelDetector.reset();
+    }
     
     /**
      * Use this method to define your trigger->command mappings. Triggers can be created via the
@@ -140,19 +169,30 @@ public class RobotContainer {
      */
     private void configureBindings() {
         configureManualDriveBindings();
+        // Keep vision integration running continuously in every mode, including disabled, so the pose estimator converges before autonomous starts.
         limelight.setDefaultCommand(updateVisionCommand());
 
+        // Home mechanisms at mode entry so later position commands have a known reference.
         RobotModeTriggers.autonomous().or(RobotModeTriggers.teleop())
             .onTrue(intake.homingCommand())
             .onTrue(hanger.homingCommand());
 
+        // Driver "fire" controls: trigger uses auto-aim path, bumper uses manual shooter RPM.
         driverRightTrigger().whileTrue(subsystemCommands.aimAndShoot());
         driverRightBumper().whileTrue(subsystemCommands.shootManually());
+        // Driver "intake" controls.
         driverLeftTrigger().whileTrue(intake.intakeCommand());
         driverLeftBumper().onTrue(intake.runOnce(() -> intake.set(Intake.Position.STOWED)));
+        // Driver-assisted autonomous cycle (requires BCNP planner).
+        fullCycleCommand.ifPresent(command -> driverXButton().whileTrue(command));
 
+        // D-pad vertical controls hanger stages.
         driverPovUp().onTrue(hanger.positionCommand(Hanger.Position.HANGING));
         driverPovDown().onTrue(hanger.positionCommand(Hanger.Position.HUNG));
+
+        // D-pad horizontal currently cycles through predefined hood stages.
+        driverPovRight().onTrue(Commands.runOnce(() -> hood.cycleStage()));
+        driverPovLeft().onTrue(Commands.runOnce(() -> hood.cycleStage()));        
     }
 
     private void configureManualDriveBindings() {
@@ -163,11 +203,13 @@ public class RobotContainer {
             () -> -driver.getRightX()
         );
         swerve.setDefaultCommand(manualDriveCommand);
+        /* 
         driver.pov(180).onTrue(Commands.runOnce(() -> manualDriveCommand.setLockedHeading(Rotation2d.k180deg)));
         driver.pov(-90).onTrue(Commands.runOnce(() -> manualDriveCommand.setLockedHeading(Rotation2d.kCW_90deg)));
         driver.pov(0).onTrue(Commands.runOnce(() -> manualDriveCommand.setLockedHeading(Rotation2d.kCCW_90deg)));
-        driver.pov(90).onTrue(Commands.runOnce(() -> manualDriveCommand.setLockedHeading(Rotation2d.kZero)));
-        driver.back().onTrue(Commands.runOnce(manualDriveCommand::seedFieldCentric));
+        driver.pov(90).onTrue(Commands.runOnce(() -> manualDriveCommand.setLockedHeading(Rotation2d.kZero))); */
+        // Re-zero the driver's forward direction without rebooting robot code.
+        driver.back().onTrue(Commands.runOnce(manualDriveCommand::seedFieldCentric)); 
     }
 
     private Command updateVisionCommand() {
@@ -175,12 +217,23 @@ public class RobotContainer {
             final Pose2d currentRobotPose = swerve.getState().Pose;
             final Optional<Limelight.Measurement> measurement = limelight.getMeasurement(currentRobotPose);
             measurement.ifPresent(m -> {
+                // Feed limelight pose into the drivetrain estimator with per-measurement covariance.
                 swerve.addVisionMeasurement(
                     m.poseEstimate.pose, 
                     m.poseEstimate.timestampSeconds,
                     m.standardDeviations
                 );
             });
+
+            // Keep BCNP pose context fresh for teleop full-cycle and send opponent tracks.
+            if (autoRoutines.getPlannerClient() instanceof BcnpTcpPlannerClient bcnp) {
+                final DriverStation.Alliance alliance = DriverStation.getAlliance().orElse(DriverStation.Alliance.Blue);
+                bcnp.updatePoseContext(currentRobotPose, alliance);
+                bcnp.sendOpponentUpdates(limelight.getOpponents());
+            }
+            if (!DriverStation.isAutonomousEnabled()) {
+                autoRoutines.getPlannerClient().periodic();
+            }
         })
         .ignoringDisable(true);
     }

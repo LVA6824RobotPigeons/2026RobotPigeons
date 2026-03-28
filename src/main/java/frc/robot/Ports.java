@@ -28,6 +28,7 @@ public final class Ports {
     public static final int kHoodRightServo = 4;
 
     // Controller Ports
+    // USB index as shown in Driver Station USB tab.
     public static final int driver = 0;
 
 }

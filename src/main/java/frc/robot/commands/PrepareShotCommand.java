@@ -5,7 +5,6 @@ import static edu.wpi.first.units.Units.Meters;
 
 import java.util.function.Supplier;
 
-import com.ctre.phoenix6.signals.RGBWColor;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
@@ -14,9 +13,7 @@ import edu.wpi.first.math.interpolation.InverseInterpolator;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import frc.robot.Constants;
 import frc.robot.Landmarks;
-import frc.robot.Ports;
 import frc.robot.subsystems.Hood;
 import frc.robot.subsystems.Shooter;
 
@@ -36,7 +33,7 @@ public class PrepareShotCommand extends Command {
     );
 
     static {
-        // Maps out 3 different points and how far and fast you need to shoot and then interpolates everything in between
+        // Hand-tuned calibration points. Interpolation is used between these distances.
         distanceToShotMap.put(Inches.of(52.0), new Shot(2800, 0.19));
         distanceToShotMap.put(Inches.of(114.4), new Shot(3275, 0.40));
         distanceToShotMap.put(Inches.of(165.5), new Shot(3650, 0.48));
@@ -46,23 +43,22 @@ public class PrepareShotCommand extends Command {
     private final Hood hood;
     private final Supplier<Pose2d> robotPoseSupplier;
 
-    // Sets up data and requirments
     public PrepareShotCommand(Shooter shooter, Hood hood, Supplier<Pose2d> robotPoseSupplier) {
         this.shooter = shooter;
         this.hood = hood;
         this.robotPoseSupplier = robotPoseSupplier;
-        addRequirements(shooter, hood); // Requires shooter and hoot for command I think
+        addRequirements(shooter, hood);
     }
 
     public boolean isReadyToShoot() {
-        //  Returns true if the wheels are going fast enough, and if the position is correct enough
-        return shooter.isVelocityWithinTolerance() && hood.isPositionWithinTolerance(); // "gives if in tol. returns dalse if not" - Mike
+        // Feed should only happen once both energy (RPM) and launch angle are stable.
+        return shooter.isVelocityWithinTolerance() && hood.isPositionWithinTolerance();
     }
 
     private Distance getDistanceToHub() {
         final Translation2d robotPosition = robotPoseSupplier.get().getTranslation();
         final Translation2d hubPosition = Landmarks.hubPosition();
-        return Meters.of(robotPosition.getDistance(hubPosition)); // Gets distance to hub in meters
+        return Meters.of(robotPosition.getDistance(hubPosition));
     }
 
     @Override
@@ -76,20 +72,21 @@ public class PrepareShotCommand extends Command {
     public void execute() {
         final Distance distanceToHub = getDistanceToHub();
         final Shot shot = distanceToShotMap.get(distanceToHub);
+        // Closed-loop setpoints are updated every scheduler cycle so moving shots stay tracked.
         shooter.setRPM(shot.shooterRPM);
         hood.setPosition(shot.hoodPosition);
-        SmartDashboard.putNumber("Distance to Hub (inches)", distanceToHub.in(Inches)); // Adds to smart dashboard
+        SmartDashboard.putNumber("Distance to Hub (inches)", distanceToHub.in(Inches));
     }
 
     @Override
     public boolean isFinished() {
-        // Runs infinitely until stopped
         return false;
     }
 
     @Override
     public void end(boolean interrupted) {
-        shooter.stop(); // in the name of law!
+        // Explicit spin-down prevents flywheel carry-over into unrelated commands.
+        shooter.stop();
     }
 
     public static class Shot {
@@ -98,7 +95,7 @@ public class PrepareShotCommand extends Command {
 
         public Shot(double shooterRPM, double hoodPosition) {
             this.shooterRPM = shooterRPM;
-            this.hoodPosition = hoodPosition; //basic shot data for pos and shooting
+            this.hoodPosition = hoodPosition;
         }
     }
 }

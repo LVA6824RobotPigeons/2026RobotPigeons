@@ -67,15 +67,8 @@ public class Floor extends SubsystemBase {
     }
 
     public Command feedCommand() {
-        return startEnd(
-                () -> {
-                    LED8Implimentation.intakeOn();
-                    set(Speed.FEED);
-                },
-                () -> {
-                    LED8Implimentation.intakeOff();
-                    set(Speed.STOP);
-                });
+        // Run floor conveyor while command is scheduled; stop immediately on end.
+        return startEnd(() -> set(Speed.FEED), () -> set(Speed.STOP));
     }
 
     @Override

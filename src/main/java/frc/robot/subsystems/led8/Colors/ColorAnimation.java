@@ -134,7 +134,7 @@ public class ColorAnimation {
     }
 
     public void tick(int refreshRate, LED8 led8) {
-
+        // Re-apply current animation each cycle so CTRE animation object stays bound to strip bounds.
         switch(type) {
             case Fire -> setAnimation(fire,led8);
             case Larson -> setAnimation(larson,led8);
