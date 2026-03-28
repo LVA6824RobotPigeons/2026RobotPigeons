@@ -55,8 +55,8 @@ public class Hanger extends SubsystemBase {
     private static final Per<DistanceUnit, AngleUnit> kHangerExtensionPerMotorAngle = Inches.of(6).div(Rotations.of(142));
     private static final Distance kExtensionTolerance = Inches.of(1);
     private static final double kHomingPercentOutput = -0.05;
-    private static final double kHomingCurrentThresholdAmps = 8.0;
-    private static final double kHomingTimeoutSeconds = 2.0;
+    private static final double kHomingCurrentThresholdAmps = 0.4;
+    private static final double kHomingTimeoutSeconds = 100.0;
 
     private final TalonFX motor;
     private final MotionMagicVoltage motionMagicRequest = new MotionMagicVoltage(0).withSlot(0);
@@ -127,7 +127,9 @@ public class Hanger extends SubsystemBase {
                     isHomed = true;
                     set(Position.EXTEND_HOPPER);
                 }),
-                runOnce(() -> setPercentOutput(0)),
+                runOnce(() -> {
+                    setPercentOutput(0);
+                }),
                 this::isHomingCurrentReached
             )
         )

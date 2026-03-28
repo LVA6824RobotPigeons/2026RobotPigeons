@@ -22,7 +22,6 @@ import frc.robot.subsystems.LED8Implimentation;
  */
 public class Robot extends TimedRobot {
     public final RobotContainer m_robotContainer;
-    private final XboxController temp = new XboxController(0);
     
     /**
      * This function is run when the robot is first started up and should be used for any
