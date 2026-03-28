@@ -38,7 +38,7 @@ public class Shooter extends SubsystemBase implements AutoCloseable {
             new VelocityVoltage(0).withSlot(0).withEnableFOC(false);
     private final VoltageOut voltageRequest = new VoltageOut(0).withEnableFOC(false);
 
-    private double dashboardTargetRPM = 0.0;
+    private double dashboardTargetRPM = 3500.0;
 
     public Shooter() {
         leftMotor = new TalonFX(Ports.kShooterLeft, Ports.kCANivoreCANBus);
