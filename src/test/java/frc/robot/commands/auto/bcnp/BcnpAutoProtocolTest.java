@@ -86,4 +86,53 @@ class BcnpAutoProtocolTest {
         final var decoded = BcnpAutoProtocol.decodeAutoHeartbeatPayload(new byte[4]);
         assertTrue(decoded.isEmpty());
     }
+
+    @Test
+    void encodeAutoWorldUpdate_clampsSignedAndUnsignedShortFields() {
+        final byte[] packet = BcnpAutoProtocol.encodeAutoWorldUpdate(
+            999,
+            true,
+            100_000,
+            80_000,
+            999_999,
+            -999_999,
+            1_500,
+            -2_500,
+            999_999
+        );
+        final BcnpAutoProtocol.DecodedPacket decoded = BcnpAutoProtocol.decodePacket(packet, 0, packet.length);
+        assertTrue(decoded.isOk());
+
+        final ByteBuffer view = ByteBuffer.wrap(decoded.payload()).order(ByteOrder.BIG_ENDIAN);
+        assertEquals(0xFF, Byte.toUnsignedInt(view.get()));
+        assertEquals(1, Byte.toUnsignedInt(view.get()));
+        assertEquals(0xFFFF, Short.toUnsignedInt(view.getShort()));
+        assertEquals(0xFFFF, Short.toUnsignedInt(view.getShort()));
+        assertEquals(Short.MAX_VALUE, view.getShort());
+        assertEquals(Short.MIN_VALUE, view.getShort());
+    }
+
+    @Test
+    void encodeAutoOpponentUpdate_clampsByteAndShortFields() {
+        final byte[] packet = BcnpAutoProtocol.encodeAutoOpponentUpdate(
+            -5,
+            1_000,
+            100,
+            200,
+            500_000,
+            -500_000,
+            2_000
+        );
+        final BcnpAutoProtocol.DecodedPacket decoded = BcnpAutoProtocol.decodePacket(packet, 0, packet.length);
+        assertTrue(decoded.isOk());
+
+        final ByteBuffer view = ByteBuffer.wrap(decoded.payload()).order(ByteOrder.BIG_ENDIAN);
+        assertEquals(0, Byte.toUnsignedInt(view.get()));
+        assertEquals(0xFF, Byte.toUnsignedInt(view.get()));
+        assertEquals(100, view.getInt());
+        assertEquals(200, view.getInt());
+        assertEquals(Short.MAX_VALUE, view.getShort());
+        assertEquals(Short.MIN_VALUE, view.getShort());
+        assertEquals(2000, Short.toUnsignedInt(view.getShort()));
+    }
 }

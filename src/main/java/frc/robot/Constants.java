@@ -11,6 +11,7 @@ import com.ctre.phoenix6.signals.RGBWColor;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.LinearVelocity;
 import frc.robot.commands.auto.PlannerExecutionMode;
+import frc.robot.commands.auto.bcnp.BcnpValidationMode;
 import frc.robot.generated.TunerConstants;
 
 public final class Constants {
@@ -38,6 +39,7 @@ public final class Constants {
         public static final long kBcnpHeartbeatTimeoutMs = 500;
         public static final long kBcnpPlanFreshMs = 1000;
         public static final int kActivePlanMinConfidencePermille = 450;
+        public static final BcnpValidationMode kBcnpValidationMode = BcnpValidationMode.STRICT;
     }
 
     public static class LEDs {

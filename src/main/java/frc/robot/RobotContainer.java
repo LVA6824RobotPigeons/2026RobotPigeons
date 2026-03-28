@@ -11,6 +11,7 @@ import java.util.function.BooleanSupplier;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -20,6 +21,7 @@ import frc.robot.Constants.Driving;
 import frc.robot.commands.AutoRoutines;
 import frc.robot.commands.ManualDriveCommand;
 import frc.robot.commands.SubsystemCommands;
+import frc.robot.commands.auto.FuelDetector;
 import frc.robot.subsystems.Feeder;
 import frc.robot.subsystems.Floor;
 import frc.robot.commands.auto.bcnp.BcnpTcpPlannerClient;
@@ -45,6 +47,7 @@ public class RobotContainer {
     private final Intake intake = new Intake();
     private final Floor floor = new Floor();
     private final Feeder feeder = new Feeder();
+    private final FuelDetector fuelDetector = new FuelDetector(intake, feeder);
     private final Shooter shooter = new Shooter();
     private final Hood hood = new Hood();
     private final Hanger hanger = new Hanger();
@@ -115,6 +118,7 @@ public class RobotContainer {
         intake,
         floor,
         feeder,
+        fuelDetector,
         shooter,
         hood,
         hanger,
@@ -138,6 +142,20 @@ public class RobotContainer {
         configureBindings();
         autoRoutines.configure();
         swerve.registerTelemetry(swerveTelemetry::telemeterize);
+    }
+
+    public FuelDetector fuelDetector() {
+        return fuelDetector;
+    }
+
+    public void periodic() {
+        fuelDetector.update();
+        SmartDashboard.putNumber("balls", fuelDetector.getFuelCount());
+        SmartDashboard.putBoolean("ball", fuelDetector.hasFuelRaw());
+    }
+
+    public void resetFuelDetector() {
+        fuelDetector.reset();
     }
     
     /**
