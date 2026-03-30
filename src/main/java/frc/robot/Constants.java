@@ -30,7 +30,7 @@ public final class Constants {
         // LOCAL_ONLY: ignore planner, SHADOW: observe planner, ACTIVE: planner health
         // gates execution.
         public static final PlannerExecutionMode kPlannerExecutionMode = PlannerExecutionMode.ACTIVE;
-        public static final String kBcnpHost = "10.68.24.20";
+        public static final String kBcnpHost = "10.68.24.21";
         public static final int kBcnpPort = 5801;
         public static final String kBcnpSchemaDeployPath = "bcnp/messages.json";
         public static final int kBcnpSchemaHashFallback = 0x1A2B3C4D;

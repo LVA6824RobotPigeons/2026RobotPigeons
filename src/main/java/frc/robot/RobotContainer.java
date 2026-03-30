@@ -52,6 +52,8 @@ public class RobotContainer {
     private final Hood hood = new Hood();
     private final Hanger hanger = new Hanger();
     private final Limelight limelight = new Limelight("limelight");
+    private final ManualDriveCommand manualDriveCommand;
+    private int fieldCentricSeedCount = 0;
 
     public CommandXboxController driver = new CommandXboxController(Ports.driver);
 
@@ -139,6 +141,12 @@ public class RobotContainer {
     
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
+        manualDriveCommand = new ManualDriveCommand(
+            swerve,
+            () -> -driver.getLeftY(),
+            () -> -driver.getLeftX(),
+            () -> -driver.getRightX()
+        );
         configureBindings();
         autoRoutines.configure();
         swerve.registerTelemetry(swerveTelemetry::telemeterize);
@@ -150,8 +158,17 @@ public class RobotContainer {
 
     public void periodic() {
         fuelDetector.update();
-        SmartDashboard.putNumber("balls", fuelDetector.getFuelCount());
-        SmartDashboard.putBoolean("ball", fuelDetector.hasFuelRaw());
+        SmartDashboard.putNumber("Counter/EstimatedBallCount", fuelDetector.getFuelCount());
+        SmartDashboard.putBoolean("Counter/VoltSpikeDetect", fuelDetector.hasFuelRaw());
+        SmartDashboard.putNumber("Drive/StickForwardRaw", -driver.getLeftY());
+        SmartDashboard.putNumber("Drive/StickLeftRaw", -driver.getLeftX());
+        SmartDashboard.putNumber("Drive/CommandedVxMps",
+            Driving.kMaxSpeed.times(manualDriveCommand.getLastCommandedForward()).in(MetersPerSecond));
+        SmartDashboard.putNumber("Drive/CommandedVyMps",
+            Driving.kMaxSpeed.times(manualDriveCommand.getLastCommandedLeft()).in(MetersPerSecond));
+        SmartDashboard.putNumber("Drive/HeadingDeg", swerve.getState().Pose.getRotation().getDegrees());
+        SmartDashboard.putNumber("Drive/OperatorForwardDeg", swerve.getOperatorForwardDirection().getDegrees());
+        SmartDashboard.putNumber("Drive/FieldCentricSeedCount", fieldCentricSeedCount);
     }
 
     public void resetFuelDetector() {
@@ -191,17 +208,11 @@ public class RobotContainer {
         driverPovDown().onTrue(hanger.positionCommand(Hanger.Position.HUNG));
 
         // D-pad horizontal currently cycles through predefined hood stages.
-        driverPovRight().onTrue(Commands.runOnce(() -> hood.cycleStage()));
-        driverPovLeft().onTrue(Commands.runOnce(() -> hood.cycleStage()));        
+        driverPovRight().onTrue(Commands.runOnce(hood::cycleStage));
+        driverPovLeft().onTrue(Commands.runOnce(hood::cycleStageBackward));
     }
 
     private void configureManualDriveBindings() {
-        final ManualDriveCommand manualDriveCommand = new ManualDriveCommand(
-            swerve, 
-            () -> -driver.getLeftY(), 
-            () -> -driver.getLeftX(), 
-            () -> -driver.getRightX()
-        );
         swerve.setDefaultCommand(manualDriveCommand);
         /* 
         driver.pov(180).onTrue(Commands.runOnce(() -> manualDriveCommand.setLockedHeading(Rotation2d.k180deg)));
@@ -209,7 +220,14 @@ public class RobotContainer {
         driver.pov(0).onTrue(Commands.runOnce(() -> manualDriveCommand.setLockedHeading(Rotation2d.kCCW_90deg)));
         driver.pov(90).onTrue(Commands.runOnce(() -> manualDriveCommand.setLockedHeading(Rotation2d.kZero))); */
         // Re-zero the driver's forward direction without rebooting robot code.
-        driver.back().onTrue(Commands.runOnce(manualDriveCommand::seedFieldCentric)); 
+        driverBackButton().onTrue(Commands.runOnce(() -> reseedFieldCentric("DriverBackButton")));
+        RobotModeTriggers.teleop().onTrue(Commands.runOnce(() -> reseedFieldCentric("TeleopEnable")));
+    }
+
+    private void reseedFieldCentric(String reason) {
+        manualDriveCommand.seedFieldCentric();
+        fieldCentricSeedCount++;
+        SmartDashboard.putString("Drive/LastFieldCentricSeedReason", reason);
     }
 
     private Command updateVisionCommand() {

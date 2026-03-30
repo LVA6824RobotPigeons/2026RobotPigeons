@@ -62,6 +62,8 @@ public final class AutoRoutines {
     private static final double kTransitAndPreSpinTimeoutSeconds = 4.0;
     private static final double kAimAndShootTimeoutSeconds = 4.0;
     private static final double kSafeExitTimeoutSeconds = 1.2;
+    private static final double kLegacyFallbackDriveTimeoutSeconds = 2.6;
+    private static final double kLegacyFallbackAimAndShootTimeoutSeconds = 5.0;
     private static final double kAdaptiveCollectionMaxElapsedSeconds = 6.5;
     private static final double kAdaptiveTrajectoryTransitMaxElapsedSeconds = 9.5;
     private static final LocalAutoProfile kLeftProfile = new LocalAutoProfile(
@@ -556,7 +558,7 @@ public final class AutoRoutines {
                 kSeedAndDepartTimeoutSeconds,
                 phaseCommand,
                 reachedOutpost::get,
-                buildSafeExitCommand(exitComplete));
+                buildLegacyLocalFallbackCommand(exitComplete));
     }
 
     private AutoPhase buildCollectDepotFuelPhase(
@@ -578,7 +580,7 @@ public final class AutoRoutines {
                 kCollectDepotTimeoutSeconds,
                 phaseCommand,
                 reachedDepot::get,
-                buildSafeExitCommand(exitComplete));
+                buildLegacyLocalFallbackCommand(exitComplete));
     }
 
     private AutoPhase buildAdvanceDepotNoCollectPhase(
@@ -593,7 +595,7 @@ public final class AutoRoutines {
                 kAdvanceDepotTimeoutSeconds,
                 phaseCommand,
                 reachedDepot::get,
-                buildSafeExitCommand(exitComplete));
+                buildLegacyLocalFallbackCommand(exitComplete));
     }
 
     private AutoPhase buildTransitAndPreSpinPhase(
@@ -614,7 +616,7 @@ public final class AutoRoutines {
                 kTransitAndPreSpinTimeoutSeconds,
                 phaseCommand,
                 reachedShootingPose::get,
-                buildSafeExitCommand(exitComplete));
+                buildLegacyLocalFallbackCommand(exitComplete));
     }
 
     private AutoPhase buildAimAndShootPhase(
@@ -627,7 +629,7 @@ public final class AutoRoutines {
                 kAimAndShootTimeoutSeconds,
                 buildShotPhaseCommand(profile, shotComplete, shotValidation),
                 shotComplete::get,
-                buildSafeExitCommand(exitComplete));
+                buildLegacyLocalFallbackCommand(exitComplete));
     }
 
     private AutoPhase buildExitPhase(AtomicBoolean exitComplete) {
@@ -668,7 +670,7 @@ public final class AutoRoutines {
                 kCollectDepotTimeoutSeconds,
                 phaseCommand,
                 reachedDepot::get,
-                buildSafeExitCommand(exitComplete));
+                buildLegacyLocalFallbackCommand(exitComplete));
     }
 
     private AutoPhase buildAdaptiveTransitOrBreakoffPhase(
@@ -705,7 +707,7 @@ public final class AutoRoutines {
                 kTransitAndPreSpinTimeoutSeconds,
                 phaseCommand,
                 reachedShootingPose::get,
-                buildSafeExitCommand(exitComplete));
+                buildLegacyLocalFallbackCommand(exitComplete));
     }
 
     private AutoPhase buildAdaptiveFinishPhase(
@@ -719,7 +721,7 @@ public final class AutoRoutines {
                 3.0,
                 safeExitCommand,
                 exitComplete::get,
-                buildSafeExitCommand(exitComplete));
+                buildLegacyLocalFallbackCommand(exitComplete));
     }
 
     private Command buildShotPhaseCommand(
@@ -746,10 +748,16 @@ public final class AutoRoutines {
 
     private Command buildBreakoffDriveCommand(
             java.util.function.Supplier<Pose2d> targetPoseSupplier,
+            double timeoutSeconds) {
+        return new DriveToPoseCommand(swerve, targetPoseSupplier).withTimeout(timeoutSeconds);
+    }
+
+    private Command buildBreakoffDriveCommand(
+            java.util.function.Supplier<Pose2d> targetPoseSupplier,
             AtomicBoolean completionFlag,
             double timeoutSeconds) {
         return Commands.sequence(
-                new DriveToPoseCommand(swerve, targetPoseSupplier).withTimeout(timeoutSeconds),
+                buildBreakoffDriveCommand(targetPoseSupplier, timeoutSeconds),
                 Commands.runOnce(() -> completionFlag.set(true)));
     }
 
@@ -901,6 +909,13 @@ public final class AutoRoutines {
                 Commands.runOnce(() -> intake.set(Intake.Speed.STOP)),
                 Commands.runOnce(() -> intake.set(Intake.Position.STOWED)),
                 Commands.runOnce(() -> exitComplete.set(true)));
+    }
+
+    private Command buildLegacyLocalFallbackCommand(AtomicBoolean exitComplete) {
+        return Commands.sequence(
+                buildBreakoffDriveCommand(this::shootingBreakoffPoseForAlliance, kLegacyFallbackDriveTimeoutSeconds),
+                subsystemCommands.aimAndShoot().withTimeout(kLegacyFallbackAimAndShootTimeoutSeconds),
+                buildSafeExitCommand(exitComplete));
     }
 
     private AutoRoutine outpostAndDepotLegacyRoutine() {

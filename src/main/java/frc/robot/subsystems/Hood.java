@@ -24,6 +24,7 @@ public class Hood extends SubsystemBase {
     private static final double kMinPosition = 0.01;
     private static final double kMaxPosition = 0.77;
     private static final double kPositionTolerance = 0.01;
+    private static final boolean kInvertRightServo = false;
 
     private final Servo leftServo;
     private final Servo rightServo;
@@ -35,11 +36,23 @@ public class Hood extends SubsystemBase {
     // Preset hood positions cycled by D-pad in teleop.
     private int stage = 0;
 
-    private static final double[] STAGES = {0.0,0.2,0.4,0.6,0.8,1};
+    private static final double[] STAGES = {0.0, 0.2, 0.4, 0.6, 0.8, 1};
+
+    private void stepStage(int delta) {
+        stage = Math.floorMod(stage + delta, STAGES.length);
+        setPosition(STAGES[stage]);
+    }
 
     public void cycleStage() {
-        stage = (stage + 1) % STAGES.length;
-        setPosition(STAGES[stage]);
+        stepStage(1);
+    }
+
+    public void cycleStageBackward() {
+        stepStage(-1);
+    }
+
+    public int getStage() {
+        return stage;
     }
 
     public Hood() {
@@ -54,8 +67,9 @@ public class Hood extends SubsystemBase {
     /** Expects a pos between 0.0 and 1.0(normalized) */
     public void setPosition(double position) {
         final double clampedPosition = MathUtil.clamp(position, kMinPosition, kMaxPosition);
+        final double rightServoPosition = kInvertRightServo ? 1.0 - clampedPosition : clampedPosition;
         leftServo.set(clampedPosition);
-        rightServo.set(clampedPosition);
+        rightServo.set(rightServoPosition);
         targetPosition = clampedPosition;
     }
 
@@ -90,6 +104,11 @@ public class Hood extends SubsystemBase {
     @Override
     public void periodic() {
         updateCurrentPosition();
+        SmartDashboard.putNumber("Hood/Stage", stage);
+        SmartDashboard.putNumber("Hood/Target", targetPosition);
+        SmartDashboard.putNumber("Hood/CurrentEstimate", currentPosition);
+        SmartDashboard.putNumber("Hood/LeftServoOutput", leftServo.get());
+        SmartDashboard.putNumber("Hood/RightServoOutput", rightServo.get());
     }
 
     @Override
@@ -97,5 +116,8 @@ public class Hood extends SubsystemBase {
         builder.addStringProperty("Command", () -> getCurrentCommand() != null ? getCurrentCommand().getName() : "null", null);
         builder.addDoubleProperty("Current Position", () -> currentPosition, null);
         builder.addDoubleProperty("Target Position", () -> targetPosition, value -> setPosition(value));
+        builder.addDoubleProperty("Left Servo Output", leftServo::get, null);
+        builder.addDoubleProperty("Right Servo Output", rightServo::get, null);
+        builder.addIntegerProperty("Stage", () -> (long) stage, null);
     }
 }

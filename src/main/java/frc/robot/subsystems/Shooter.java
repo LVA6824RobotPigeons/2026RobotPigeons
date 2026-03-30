@@ -39,7 +39,7 @@ public class Shooter extends SubsystemBase {
     private AngularVelocity targetVelocity = RPM.of(0);
 
     // Dashboard-adjustable fallback RPM for manual shooting mode.
-    private double dashboardTargetRPM = 4000;
+    private double dashboardTargetRPM = 3000;
 
     public Shooter() {
         leftMotor = new TalonFX(Ports.kShooterLeft, Ports.kCANivoreCANBus);

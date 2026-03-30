@@ -57,6 +57,8 @@ public class ManualDriveCommand extends Command {
     private Optional<Rotation2d> lockedHeading = Optional.empty();
     private Stopwatch headingLockStopwatch = new Stopwatch();
     private ManualDriveInput previousInput = new ManualDriveInput();
+    private double lastCommandedForward = 0.0;
+    private double lastCommandedLeft = 0.0;
 
     public ManualDriveCommand(
         Swerve swerve,
@@ -78,6 +80,14 @@ public class ManualDriveCommand extends Command {
     public void setLockedHeading(Rotation2d heading) {
         lockedHeading = Optional.of(heading);
         currentState = State.DRIVING_WITH_LOCKED_HEADING;
+    }
+
+    public double getLastCommandedForward() {
+        return lastCommandedForward;
+    }
+
+    public double getLastCommandedLeft() {
+        return lastCommandedLeft;
     }
 
     private void setLockedHeadingToCurrent() {
@@ -105,7 +115,8 @@ public class ManualDriveCommand extends Command {
         lockedHeading = Optional.empty();
         headingLockStopwatch.reset();
         previousInput = new ManualDriveInput();
-
+        lastCommandedForward = 0.0;
+        lastCommandedLeft = 0.0;
 
     }
     @Override
@@ -129,10 +140,14 @@ public class ManualDriveCommand extends Command {
 
         switch (currentState) {
             case IDLING:
+                lastCommandedForward = 0.0;
+                lastCommandedLeft = 0.0;
                 swerve.setControl(idleRequest);
                 break;
             case DRIVING_WITH_MANUAL_ROTATION:
                 lockHeadingIfRotationStopped(input);
+                lastCommandedForward = input.forward;
+                lastCommandedLeft = input.left;
                 swerve.setControl(
                     fieldCentricRequest
                         .withVelocityX(Driving.kMaxSpeed.times(input.forward))
@@ -141,6 +156,8 @@ public class ManualDriveCommand extends Command {
                 );
                 break;
             case DRIVING_WITH_LOCKED_HEADING:
+                lastCommandedForward = input.forward;
+                lastCommandedLeft = input.left;
                 swerve.setControl(
                     fieldCentricFacingAngleRequest
                         .withVelocityX(Driving.kMaxSpeed.times(input.forward))
