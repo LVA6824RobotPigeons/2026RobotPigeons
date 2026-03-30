@@ -37,8 +37,13 @@ public class Hood extends SubsystemBase {
 
     private static final double[] STAGES = {0.0,0.2,0.4,0.6,0.8,1};
 
-    public void cycleStage() {
+    public void cycleStageUp() {
         stage = (stage + 1) % STAGES.length; // cycles 0 -> 1 -> 2 -> 0
+        setPosition(STAGES[stage]);
+    }
+
+    public void cycleStageDown() {
+        stage = (stage - 1) % STAGES.length; // cycles 2 -> 1 -> 0 -> 2
         setPosition(STAGES[stage]);
     }
 
