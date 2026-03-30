@@ -162,8 +162,8 @@ public class RobotContainer {
         driverPovUp().onTrue(hanger.positionCommand(Hanger.Position.HANGING));
         driverPovDown().onTrue(hanger.positionCommand(Hanger.Position.HUNG));
 
-        driverPovRight().onTrue(Commands.runOnce(() -> hood.cycleStage()));
-        driverPovLeft().onTrue(Commands.runOnce(() -> hood.cycleStage()));        
+        driverBButton().onTrue(Commands.runOnce(() -> hood.cycleStageUp()));
+        driverAButton().onTrue(Commands.runOnce(() -> hood.cycleStageDown()));        
     }
 
     private void configureManualDriveBindings() {
