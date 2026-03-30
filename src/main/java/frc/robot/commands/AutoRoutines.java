@@ -208,20 +208,19 @@ public final class AutoRoutines {
     }
 
     public void configure() {
-        // Keep the legacy routine available while M0/M1 routines are stabilized.
-        autoChooser.addRoutine("LEGACY - Outpost and Depot", this::outpostAndDepotLegacyRoutine);
+        autoChooser.addRoutine("Outpost and Depot", this::outpostAndDepotLegacyRoutine);
         autoChooser.addRoutine(kSafeScoreProfile.chooserName(), () -> phaseDrivenRoutine(kSafeScoreProfile));
         autoChooser.addRoutine(kFastCycleProfile.chooserName(), () -> phaseDrivenRoutine(kFastCycleProfile));
         autoChooser.addRoutine(
                 kConservativeMobilityProfile.chooserName(),
                 () -> phaseDrivenRoutine(kConservativeMobilityProfile));
-        autoChooser.addRoutine("M2 - Dynamic Classical Selector", this::dynamicClassicalRoutine);
-        autoChooser.addRoutine("M3 - Shadow Adaptive Classical", this::shadowAdaptiveClassicalRoutine);
+        autoChooser.addRoutine("Dynamic Classical Selector", this::dynamicClassicalRoutine);
+        autoChooser.addRoutine("Shadow Adaptive Classical", this::shadowAdaptiveClassicalRoutine);
         autoChooser.addRoutine(kLeftProfile.chooserName(), () -> phaseDrivenRoutine(kLeftProfile));
         autoChooser.addRoutine(kCenterProfile.chooserName(), () -> phaseDrivenRoutine(kCenterProfile));
         autoChooser.addRoutine(kRightProfile.chooserName(), () -> phaseDrivenRoutine(kRightProfile));
         if (plannerClient instanceof BcnpTcpPlannerClient) {
-            autoChooser.addRoutine("M4 - BCNP Full Cycle", this::fullCycleRoutine);
+            autoChooser.addRoutine("Full Cycle", this::fullCycleRoutine);
         }
 
         SmartDashboard.putData("Auto Chooser", autoChooser);
@@ -231,7 +230,7 @@ public final class AutoRoutines {
     }
 
     private AutoRoutine fullCycleRoutine() {
-        final AutoRoutine routine = autoFactory.newRoutine("M4 - BCNP Full Cycle");
+        final AutoRoutine routine = autoFactory.newRoutine("Full Cycle");
         routine.active().onTrue(buildFullCycleCommand().orElse(Commands.none()));
         return routine;
     }
@@ -300,7 +299,7 @@ public final class AutoRoutines {
         final LocalAutoProfile selected = selectDynamicClassicalProfile();
         dynamicSelectionName = selected.chooserName();
         final LocalAutoProfile dynamicWrappedProfile = new LocalAutoProfile(
-                "M2 - Dynamic -> " + selected.chooserName(),
+                "Dynamic -> " + selected.chooserName(),
                 selected.profileId(),
                 selected.shooterRpm(),
                 selected.hoodPosition(),
@@ -313,7 +312,7 @@ public final class AutoRoutines {
         final LocalAutoProfile selected = selectShadowAdaptiveProfile();
         dynamicSelectionName = selected.chooserName();
         final LocalAutoProfile adaptiveWrappedProfile = new LocalAutoProfile(
-                "M3 - Shadow Adaptive -> " + selected.chooserName(),
+                "Shadow Adaptive -> " + selected.chooserName(),
                 selected.profileId(),
                 selected.shooterRpm(),
                 selected.hoodPosition(),
