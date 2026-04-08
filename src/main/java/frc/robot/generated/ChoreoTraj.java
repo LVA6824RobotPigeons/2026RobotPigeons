@@ -27,41 +27,64 @@ public record ChoreoTraj(
     public static final ChoreoTraj OutpostAndDepotTrajectory = new ChoreoTraj(
         "OutpostAndDepotTrajectory",
         OptionalInt.empty(),
-        12.02458,
-        new Pose2d(2.59816, 0.63985, Rotation2d.fromRadians(0)),
-        new Pose2d(0.94756, 2.66935, Rotation2d.fromRadians(0))
+        15.20323,
+        new Pose2d(4, 1.1, Rotation2d.fromRadians(0)),
+        new Pose2d(0.94136, 3.85, Rotation2d.fromRadians(3.14159))
     );
     /** ERROR: Can only use letters, 0-9, and _. Can't use $. Rename it in the Choreo app to fix this error. */
     public static final ChoreoTraj OutpostAndDepotTrajectory$0 = new ChoreoTraj(
         "OutpostAndDepotTrajectory",
         OptionalInt.of(0),
-        1.486,
-        new Pose2d(2.59816, 0.63985, Rotation2d.fromRadians(0)),
-        new Pose2d(0.58146, 0.6689, Rotation2d.fromRadians(3.14159))
+        2.47545,
+        new Pose2d(4, 1.1, Rotation2d.fromRadians(0)),
+        new Pose2d(1.2, 1.1, Rotation2d.fromRadians(3.14159))
     );
     /** ERROR: Can only use letters, 0-9, and _. Can't use $. Rename it in the Choreo app to fix this error. */
     public static final ChoreoTraj OutpostAndDepotTrajectory$1 = new ChoreoTraj(
         "OutpostAndDepotTrajectory",
         OptionalInt.of(1),
-        3.40099,
-        new Pose2d(0.58146, 0.6689, Rotation2d.fromRadians(3.14159)),
-        new Pose2d(0.66833, 5.96377, Rotation2d.fromRadians(3.14159))
+        4.541790000000001,
+        new Pose2d(1.2, 1.1, Rotation2d.fromRadians(3.14159)),
+        new Pose2d(0.86889, 5.95779, Rotation2d.fromRadians(3.14159))
     );
     /** ERROR: Can only use letters, 0-9, and _. Can't use $. Rename it in the Choreo app to fix this error. */
     public static final ChoreoTraj OutpostAndDepotTrajectory$2 = new ChoreoTraj(
         "OutpostAndDepotTrajectory",
         OptionalInt.of(2),
-        2.5827999999999998,
-        new Pose2d(0.66833, 5.96377, Rotation2d.fromRadians(3.14159)),
-        new Pose2d(2.49839, 4.03528, Rotation2d.fromRadians(0))
+        3.9745300000000006,
+        new Pose2d(0.86889, 5.95779, Rotation2d.fromRadians(3.14159)),
+        new Pose2d(3.06188, 4.24762, Rotation2d.fromRadians(-0.61087))
     );
     /** ERROR: Can only use letters, 0-9, and _. Can't use $. Rename it in the Choreo app to fix this error. */
     public static final ChoreoTraj OutpostAndDepotTrajectory$3 = new ChoreoTraj(
         "OutpostAndDepotTrajectory",
         OptionalInt.of(3),
-        4.554790000000001,
-        new Pose2d(2.49839, 4.03528, Rotation2d.fromRadians(0)),
-        new Pose2d(0.94756, 2.66935, Rotation2d.fromRadians(0))
+        4.211459999999999,
+        new Pose2d(3.06188, 4.24762, Rotation2d.fromRadians(-0.61087)),
+        new Pose2d(0.94136, 3.85, Rotation2d.fromRadians(3.14159))
+    );
+    public static final ChoreoTraj TestCustomAuto = new ChoreoTraj(
+        "TestCustomAuto",
+        OptionalInt.empty(),
+        5.54737,
+        new Pose2d(3.45, 5.5, Rotation2d.fromRadians(0)),
+        new Pose2d(2.4, 4.4, Rotation2d.fromRadians(-0.17453))
+    );
+    /** ERROR: Can only use letters, 0-9, and _. Can't use $. Rename it in the Choreo app to fix this error. */
+    public static final ChoreoTraj TestCustomAuto$0 = new ChoreoTraj(
+        "TestCustomAuto",
+        OptionalInt.of(0),
+        2.90532,
+        new Pose2d(3.45, 5.5, Rotation2d.fromRadians(0)),
+        new Pose2d(1, 6, Rotation2d.fromRadians(3.14159))
+    );
+    /** ERROR: Can only use letters, 0-9, and _. Can't use $. Rename it in the Choreo app to fix this error. */
+    public static final ChoreoTraj TestCustomAuto$1 = new ChoreoTraj(
+        "TestCustomAuto",
+        OptionalInt.of(1),
+        2.64205,
+        new Pose2d(1, 6, Rotation2d.fromRadians(3.14159)),
+        new Pose2d(2.4, 4.4, Rotation2d.fromRadians(-0.17453))
     );
 
     /**
@@ -73,7 +96,10 @@ public record ChoreoTraj(
         Map.entry("OutpostAndDepotTrajectory$0", OutpostAndDepotTrajectory$0),
         Map.entry("OutpostAndDepotTrajectory$1", OutpostAndDepotTrajectory$1),
         Map.entry("OutpostAndDepotTrajectory$2", OutpostAndDepotTrajectory$2),
-        Map.entry("OutpostAndDepotTrajectory$3", OutpostAndDepotTrajectory$3)
+        Map.entry("OutpostAndDepotTrajectory$3", OutpostAndDepotTrajectory$3),
+        Map.entry("TestCustomAuto", TestCustomAuto),
+        Map.entry("TestCustomAuto$0", TestCustomAuto$0),
+        Map.entry("TestCustomAuto$1", TestCustomAuto$1)
     );
 
     /**

@@ -9,6 +9,11 @@ import static frc.robot.generated.ChoreoTraj.OutpostAndDepotTrajectory$1;
 import static frc.robot.generated.ChoreoTraj.OutpostAndDepotTrajectory$2;
 import static frc.robot.generated.ChoreoTraj.OutpostAndDepotTrajectory$3;
 
+import static frc.robot.generated.ChoreoTraj.TestCustomAuto$0;
+import static frc.robot.generated.ChoreoTraj.TestCustomAuto$1;
+
+import com.fasterxml.jackson.databind.type.PlaceholderForType;
+
 import choreo.auto.AutoChooser;
 import choreo.auto.AutoFactory;
 import choreo.auto.AutoRoutine;
@@ -67,6 +72,7 @@ public final class AutoRoutines {
 
     public void configure() {
         autoChooser.addRoutine("Outpost and Depot", this::outpostAndDepotRoutine);
+        autoChooser.addRoutine("Test Custom Auto", this::TestRoutine);
         SmartDashboard.putData("Auto Chooser", autoChooser);
         RobotModeTriggers.autonomous().whileTrue(autoChooser.selectedCommandScheduler());
     }
@@ -87,20 +93,20 @@ public final class AutoRoutines {
 
         routine.observe(hanger::isHomed).onTrue(
             Commands.sequence(
-                Commands.waitSeconds(0.5),
+                Commands.waitSeconds(1),
                 intake.runOnce(() -> intake.set(Intake.Position.INTAKE))
             )
         );
 
         startToOutpost.doneDelayed(1).onTrue(outpostToDepot.cmd());
 
-        outpostToDepot.atTimeBeforeEnd(1).onTrue(intake.intakeCommand());
+        outpostToDepot.atTimeBeforeEnd(3).onTrue(intake.intakeCommand());
         outpostToDepot.doneDelayed(0.1).onTrue(depotToShootingPose.cmd());
 
         depotToShootingPose.active().whileTrue(limelight.idle());
         depotToShootingPose.atTime(0.5).onTrue(
             Commands.parallel(
-                shooter.spinUpCommand(2600),
+                shooter.spinUpCommand(3000),
                 hood.positionCommand(0.32)
             )
         );
@@ -115,6 +121,49 @@ public final class AutoRoutines {
         shootingPoseToTower.active().whileTrue(limelight.idle());
         shootingPoseToTower.active().onTrue(hanger.positionCommand(Hanger.Position.HANGING));
         shootingPoseToTower.done().onTrue(hanger.positionCommand(Hanger.Position.HUNG));
+
+        return routine;
+    }
+
+//will start on left bump and pickup balls from depot then shoot
+
+    private AutoRoutine TestRoutine(){
+        final AutoRoutine routine = autoFactory.newRoutine("Test Custom Auto");
+        final AutoTrajectory startToDepot = TestCustomAuto$0.asAutoTraj(routine);
+        final AutoTrajectory depotToShootingPoseLeft = TestCustomAuto$1.asAutoTraj(routine);
+
+        routine.active().onTrue(
+            Commands.sequence(
+                startToDepot.resetOdometry(),
+                startToDepot.cmd()
+            )
+        );
+
+        routine.observe(hanger::isHomed).onTrue(
+            Commands.sequence(
+                Commands.waitSeconds(0.25),
+                intake.runOnce(() -> intake.set(Intake.Position.INTAKE))
+            )
+        );
+
+        startToDepot.atTimeBeforeEnd(1).onTrue(intake.intakeCommand());
+        startToDepot.doneDelayed(0.1).onTrue(depotToShootingPoseLeft.cmd());
+
+
+        depotToShootingPoseLeft.active().whileTrue(limelight.idle());
+        depotToShootingPoseLeft.atTime(0.5).onTrue(
+            Commands.parallel(
+                shooter.spinUpCommand(2600),
+                hood.positionCommand(0.32)
+            )
+        );
+        depotToShootingPoseLeft.done().onTrue(
+            Commands.sequence(
+                subsystemCommands.aimAndShoot()
+                    .withTimeout(5)//,
+                //shootingPoseToTower.cmd()
+            )
+        );
 
         return routine;
     }
